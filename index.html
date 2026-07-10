@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SITE-19 // Facility Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0e1013;
+    --panel:#171a20;
+    --panel-2:#1e222a;
+    --border:#2a2e37;
+    --border-soft:#22252c;
+    --text:#e7e9ec;
+    --text-muted:#8b93a1;
+    --text-dim:#5a6170;
+    --accent:#f0b23c;
+    --accent-dim:#8a692a;
+    --accent-2:#45c9bd;
+    --danger:#e0605a;
+    --good:#5ad18a;
+    --safe:#5ad18a;
+    --euclid:#f0b23c;
+    --keter:#e0605a;
+    --radius:10px;
+    --radius-sm:6px;
+  }
+
+  *{box-sizing:border-box;}
+
+  html,body{
+    margin:0;
+    padding:0;
+    height:100%;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  button{font-family:inherit;}
+
+  ::selection{background:var(--accent-dim);color:var(--text);}
+
+  .mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;}
+
+  #app{
+    display:flex;
+    flex-direction:column;
+    height:100%;
+  }
+
+  #topbar{
+    height:60px;
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 20px;
+    background:var(--panel);
+    border-bottom:1px solid var(--border);
+    z-index:5;
+  }
+
+  .brand{display:flex;flex-direction:column;gap:2px;line-height:1;}
+  .eyebrow{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);font-weight:600;}
+  .brand h1{margin:0;font-size:16px;font-weight:700;letter-spacing:0.01em;}
+
+  .status-pill{
+    display:flex;align-items:center;gap:7px;padding:5px 10px 5px 8px;
+    background:var(--panel-2);border:1px solid var(--border);border-radius:999px;
+    font-size:11px;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;font-weight:600;
+    transition:all .3s;
+  }
+  .status-pill.breach{border-color:var(--danger);color:var(--danger);background:#2a1515;}
+  .status-dot{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 6px var(--good);animation:blink 1.7s ease-in-out infinite;}
+  .status-pill.breach .status-dot{background:var(--danger);box-shadow:0 0 8px var(--danger);animation:alarm-blink .4s ease-in-out infinite;}
+
+  @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.35;}}
+  @keyframes alarm-blink{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.2;transform:scale(1.3);}}
+
+  @media (prefers-reduced-motion: reduce){
+    .status-dot,.status-pill.breach .status-dot{animation:none;}
+  }
+
+  .stat-cluster{display:flex;align-items:center;gap:22px;}
+  .stat{display:flex;flex-direction:column;align-items:flex-end;gap:1px;}
+  .stat .label{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);font-weight:600;}
+  .stat .value{font-size:15px;font-weight:600;color:var(--text);}
+  .stat .value.accent{color:var(--accent);}
+  .stat .value .income{font-size:11px;color:var(--good);margin-left:6px;font-weight:600;}
+
+  #reset-btn,#save-btn{
+    background:transparent;border:1px solid var(--border);color:var(--text-muted);
+    border-radius:var(--radius-sm);padding:7px 12px;font-size:11px;letter-spacing:0.05em;
+    text-transform:uppercase;font-weight:600;cursor:pointer;transition:border-color .15s, color .15s;
+  }
+  #reset-btn:hover{border-color:var(--danger);color:var(--danger);}
+  #save-btn:hover{border-color:var(--accent-2);color:var(--accent-2);}
+  #reset-btn:focus-visible,#save-btn:focus-visible{outline:2px solid var(--accent-2);outline-offset:2px;}
+
+  #main{flex:1 1 auto;display:flex;min-height:0;}
+
+  #sidebar{
+    width:288px;flex:0 0 auto;background:var(--panel);border-right:1px solid var(--border);
+    display:flex;flex-direction:column;min-height:0;
+  }
+
+  .tabs{display:flex;padding:12px 10px 0;gap:2px;flex-wrap:wrap;}
+  .tab-btn{
+    flex:1 1 45%;background:transparent;border:none;color:var(--text-muted);
+    padding:8px 0;font-size:10px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;
+    cursor:pointer;border-radius:var(--radius-sm) var(--radius-sm) 0 0;border-bottom:2px solid transparent;
+    transition:color .15s, border-color .15s;min-width:60px;
+  }
+  .tab-btn:hover{color:var(--text);}
+  .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+  .tab-btn:focus-visible{outline:2px solid var(--accent-2);outline-offset:-2px;}
+
+  .tab-panel{display:none;flex-direction:column;min-height:0;flex:1;padding:14px 12px;overflow-y:auto;gap:12px;}
+  .tab-panel.active{display:flex;}
+
+  .section-title{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);font-weight:700;margin:2px 2px 0;}
+  .class-header{
+    display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:0.1em;
+    text-transform:uppercase;font-weight:700;padding:6px 8px;border-radius:var(--radius-sm);margin-top:4px;
+  }
+  .class-header.safe{background:rgba(90,209,138,0.1);color:var(--safe);border-left:3px solid var(--safe);}
+  .class-header.euclid{background:rgba(240,178,60,0.1);color:var(--euclid);border-left:3px solid var(--euclid);}
+  .class-header.keter{background:rgba(224,96,90,0.12);color:var(--keter);border-left:3px solid var(--keter);}
+
+  .item-list{display:flex;flex-direction:column;gap:6px;}
+
+  .item-btn{
+    display:flex;align-items:center;gap:10px;background:var(--panel-2);border:1px solid var(--border-soft);
+    border-radius:var(--radius);padding:9px 10px;cursor:pointer;text-align:left;
+    transition:border-color .15s, background .15s, transform .1s;color:var(--text);
+  }
+  .item-btn:hover{border-color:var(--border);background:#232832;}
+  .item-btn:active{transform:scale(0.98);}
+  .item-btn.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;}
+  .item-btn.locked{opacity:0.55;}
+  .item-btn.contained{border-left:3px solid var(--accent-2);}
+  .item-btn.breached{border-left:3px solid var(--danger);animation:pulse-border 1s infinite;}
+  .item-btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .item-btn:focus-visible{outline:2px solid var(--accent-2);outline-offset:1px;}
+
+  @keyframes pulse-border{0%,100%{box-shadow:0 0 0 0 rgba(224,96,90,0.4);}50%{box-shadow:0 0 0 3px rgba(224,96,90,0.15);}}
+
+  .swatch{width:20px;height:20px;border-radius:6px;flex:0 0 auto;border:1px solid rgba(255,255,255,0.15);}
+  .swatch.dot{border-radius:50%;}
+
+  .item-text{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0;}
+  .item-text .name{font-size:12.5px;font-weight:600;}
+  .item-text .meta{font-size:11px;color:var(--text-muted);}
+
+  .item-badge{font-size:11px;color:var(--text-dim);font-weight:600;flex:0 0 auto;}
+  .item-badge.owned{color:var(--accent-2);}
+  .class-tag{font-size:9px;font-weight:700;letter-spacing:0.06em;padding:2px 6px;border-radius:4px;text-transform:uppercase;}
+  .class-tag.safe{background:rgba(90,209,138,0.15);color:var(--safe);}
+  .class-tag.euclid{background:rgba(240,178,60,0.15);color:var(--euclid);}
+  .class-tag.keter{background:rgba(224,96,90,0.15);color:var(--keter);}
+
+  #demolish-btn{
+    display:flex;align-items:center;justify-content:center;gap:8px;background:transparent;
+    border:1px solid var(--border);border-radius:var(--radius);padding:9px 10px;color:var(--text-muted);
+    font-size:12px;font-weight:600;letter-spacing:0.03em;cursor:pointer;transition:all .15s;
+  }
+  #demolish-btn:hover{border-color:var(--danger);color:var(--danger);}
+  #demolish-btn.active{background:var(--danger);border-color:var(--danger);color:#1a0a0a;}
+  #demolish-btn:focus-visible{outline:2px solid var(--accent-2);outline-offset:2px;}
+
+  .action-btn{
+    display:flex;align-items:center;justify-content:center;gap:6px;width:100%;
+    background:var(--panel-2);border:1px solid var(--border);border-radius:var(--radius);
+    padding:10px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;
+  }
+  .action-btn:hover{border-color:var(--accent);background:#232832;}
+  .action-btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .action-btn.danger:hover{border-color:var(--danger);color:var(--danger);}
+  .action-btn.mtf{background:#1a2535;border-color:#26405c;}
+  .action-btn.mtf:hover{border-color:var(--accent-2);color:var(--accent-2);}
+
+  .stat-chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .chip{background:var(--panel-2);border:1px solid var(--border-soft);border-radius:999px;padding:5px 10px;font-size:11px;color:var(--text-muted);display:flex;gap:5px;}
+  .chip b{color:var(--text);font-weight:600;}
+  .chip.warn{border-color:rgba(224,96,90,0.4);color:var(--danger);}
+
+  .hint-box{background:var(--panel-2);border:1px solid var(--border-soft);border-radius:var(--radius);padding:10px 11px;font-size:11.5px;line-height:1.5;color:var(--text-muted);}
+  .progress-bar{height:6px;background:var(--border-soft);border-radius:999px;overflow:hidden;margin-top:6px;}
+  .progress-bar .fill{height:100%;background:var(--accent-2);border-radius:999px;transition:width .2s;}
+
+  .scp-detail{
+    background:var(--panel-2);border:1px solid var(--border);border-radius:var(--radius);
+    padding:10px 11px;font-size:11.5px;line-height:1.55;color:var(--text-muted);
+  }
+  .scp-detail h4{margin:0 0 6px;font-size:12px;color:var(--text);}
+
+  #viewport{
+    flex:1;position:relative;display:flex;align-items:center;justify-content:center;
+    min-width:0;min-height:0;
+    background:radial-gradient(ellipse at center, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0) 60%), var(--bg);
+  }
+  #viewport::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(to bottom, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px);
+  }
+  #viewport::before{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 140px rgba(0,0,0,0.65);z-index:2;}
+  #viewport.alarm::before{box-shadow:inset 0 0 140px rgba(0,0,0,0.65), inset 0 0 80px rgba(224,96,90,0.25);animation:alarm-vignette 1s infinite;z-index:3;}
+  @keyframes alarm-vignette{0%,100%{opacity:1;}50%{opacity:0.5;}}
+
+  #gameCanvas{display:block;border-radius:4px;box-shadow:0 0 0 1px var(--border), 0 20px 60px rgba(0,0,0,0.5);}
+
+  #toast-container{position:absolute;bottom:18px;right:18px;display:flex;flex-direction:column;gap:8px;z-index:10;pointer-events:none;}
+  .toast{
+    background:var(--panel-2);border:1px solid var(--border);border-left:3px solid var(--accent);
+    border-radius:var(--radius-sm);padding:9px 13px;font-size:12.5px;color:var(--text);
+    box-shadow:0 8px 20px rgba(0,0,0,0.4);animation:toast-in .18s ease-out;max-width:280px;
+  }
+  .toast.error{border-left-color:var(--danger);}
+  .toast.success{border-left-color:var(--good);}
+  .toast.fade{animation:toast-out .25s ease-in forwards;}
+  @keyframes toast-in{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes toast-out{to{opacity:0;transform:translateY(-4px);}}
+
+  @media (max-width:820px){
+    #sidebar{width:230px;}
+    .stat-cluster{gap:14px;}
+    .stat .label{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header id="topbar">
+    <div class="brand">
+      <div class="eyebrow">Site Administration // Restricted</div>
+      <h1>FACILITY-19 CONTROL</h1>
+    </div>
+    <div class="stat-cluster">
+      <div class="status-pill" id="status-pill"><span class="status-dot"></span><span id="status-text">Operational</span></div>
+      <div class="stat"><span class="label">Day</span><span class="value mono" id="stat-day">1</span></div>
+      <div class="stat"><span class="label">Funds</span><span class="value accent mono" id="stat-money">$5,000<span class="income" id="stat-income"></span></span></div>
+      <button id="save-btn" title="Save progress">Save</button>
+      <button id="reset-btn" title="Reset facility">Reset</button>
+    </div>
+  </header>
+
+  <div id="main">
+    <aside id="sidebar">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="build">Build</button>
+        <button class="tab-btn" data-tab="staff">Staff</button>
+        <button class="tab-btn" data-tab="anomalies">SCPs</button>
+        <button class="tab-btn" data-tab="ops">Ops</button>
+      </div>
+
+      <div class="tab-panel active" id="tab-build">
+        <div class="section-title">Facility Rooms</div>
+        <div class="item-list" id="room-list"></div>
+        <button id="demolish-btn">✕ Demolish Mode</button>
+        <div class="hint-box">Build corridors to connect zones. Heavy Cells hold Keter-class SCPs. Labs unlock new anomalies via research.</div>
+      </div>
+
+      <div class="tab-panel" id="tab-staff">
+        <div class="section-title">Hire Personnel</div>
+        <div class="item-list" id="staff-list"></div>
+        <div class="section-title">Facility Status</div>
+        <div class="stat-chips" id="stat-chips"></div>
+        <div class="hint-box">Scientists and Class-D auto-run tests in containment cells. MTF respond to breaches. Keep security above Class-D count to avoid riots.</div>
+      </div>
+
+      <div class="tab-panel" id="tab-anomalies">
+        <div id="scp-lists"></div>
+        <div class="scp-detail" id="scp-detail" style="display:none"></div>
+        <div class="hint-box" id="scp-hint">Acquire SCPs from Ops expeditions or unlock via research. Select an SCP, then click a compatible containment tile.</div>
+      </div>
+
+      <div class="tab-panel" id="tab-ops">
+        <div class="section-title">Research Queue</div>
+        <div id="research-panel"></div>
+        <div class="section-title">Field Operations</div>
+        <button class="action-btn mtf" id="expedition-btn">Deploy MTF Expedition</button>
+        <div id="expedition-panel"></div>
+        <div class="section-title">Emergency</div>
+        <button class="action-btn danger" id="recontain-btn" disabled>Deploy MTF Recontainment</button>
+        <div class="hint-box">Send MTF into the field to recover random anomalies. Research in Labs unlocks higher object classes.</div>
+      </div>
+    </aside>
+
+    <main id="viewport">
+      <canvas id="gameCanvas"></canvas>
+      <div id="toast-container"></div>
+    </main>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const COLS = 16, ROWS = 10;
+  const ENTRANCE = { row: Math.floor(ROWS/2), col: 0 };
+
+  const ROOMS = [
+    { id:'corridor',    name:'Corridor',          abbr:'COR', cost:120,  color:'#2a2d33', zone:'light' },
+    { id:'office',      name:'Staff Office',      abbr:'OFF', cost:400,  color:'#3a3f4b', zone:'light' },
+    { id:'breakroom',   name:'Break Room',        abbr:'BRK', cost:350,  color:'#5b4636', zone:'light' },
+    { id:'storage',     name:'Storage',           abbr:'STO', cost:250,  color:'#41454c', zone:'light' },
+    { id:'lab',         name:'Research Lab',      abbr:'LAB', cost:600,  color:'#2f6f6d', zone:'medium' },
+    { id:'security',    name:'Security Post',     abbr:'SEC', cost:500,  color:'#26405c', zone:'medium' },
+    { id:'containment', name:'Containment Cell',  abbr:'CC',  cost:800,  color:'#8b3a3a', zone:'medium', holds:['safe','euclid'] },
+    { id:'heavy',       name:'Heavy Containment', abbr:'HVY', cost:1400, color:'#5c2020', zone:'heavy', holds:['safe','euclid','keter'] },
+    { id:'control',     name:'Control Room',      abbr:'CTL', cost:900,  color:'#1e3a5f', zone:'medium', bonus:0.1 },
+  ];
+
+  const STAFF = [
+    { id:'classd',     name:'Class-D Personnel', cost:100, color:'#f5943a', role:'labor' },
+    { id:'scientist',  name:'Scientist',         cost:250, color:'#f2f3f0', role:'research' },
+    { id:'doctor',     name:'Doctor',            cost:300, color:'#5b6b7c', role:'medical' },
+    { id:'security',   name:'Security Guard',    cost:200, color:'#22385a', role:'security' },
+    { id:'mtf',        name:'MTF Operative',     cost:400, color:'#787f89', role:'security' },
+    { id:'engineer',   name:'Engineer',          cost:220, color:'#c9a227', role:'support' },
+  ];
+
+  const SCPS = [
+    { id:'scp999', num:'SCP-999', name:'Tickle Monster', cls:'safe',   cost:400,  research:0,    income:14, breach:0.002, color:'#ffb347', desc:'A large, amorphous mass of orange slime. Extremely friendly. Generates morale and research data with minimal risk.' },
+    { id:'scp131', num:'SCP-131', name:'Eye Pods',       cls:'safe',   cost:350,  research:0,    income:10, breach:0.001, color:'#7ec8e3', desc:'Pair of teardrop-shaped entities with one large eye. Harmless and curious. Low maintenance containment.' },
+    { id:'scp173', num:'SCP-173', name:'The Sculpture',  cls:'euclid', cost:900,  research:800,  income:28, breach:0.012, color:'#c9a66b', desc:'Concrete sculpture that moves when unobserved. Requires constant line-of-sight during testing.' },
+    { id:'scp049', num:'SCP-049', name:'Plague Doctor',  cls:'euclid', cost:1100, research:1200, income:32, breach:0.015, color:'#4a5568', desc:'Humanoid in medieval plague doctor garb. Attempts to "cure" subjects. Requires medical oversight.' },
+    { id:'scp096', num:'SCP-096', name:'Shy Guy',        cls:'keter',  cost:2200, research:2500, income:55, breach:0.025, color:'#e8e8e8', desc:'Humanoid that enters unstoppable rage when its face is viewed. Requires heavy containment and no visual contact.' },
+    { id:'scp682', num:'SCP-682', name:'Hard-to-Destroy Reptile', cls:'keter', cost:3500, research:4000, income:80, breach:0.035, color:'#3d6b4f', desc:'Highly adaptive reptilian entity. Nearly indestructible. Generates massive research value at extreme risk.' },
+  ];
+
+  const CLASS_ORDER = ['safe','euclid','keter'];
+  const CLASS_LABEL = { safe:'Safe', euclid:'Euclid', keter:'Keter' };
+  const START_MONEY = 5000;
+  const TICK_MS = 1000;
+  const DAY_MS = 22000;
+  const UPKEEP_PER_STAFF = 4;
+  const EXPEDITION_COST = 600;
+  const EXPEDITION_MS = 18000;
+  const RESEARCH_MS = 15000;
+  const RECONTAIN_COST = 800;
+  const SAVE_KEY = 'site19_facility_v2';
+
+  const state = {
+    money: START_MONEY,
+    day: 1,
+    grid: Array.from({length:ROWS}, ()=>Array(COLS).fill(null)),
+    staff: [],
+    scps: [],
+    unlocked: ['scp999','scp131'],
+    inventory: [],
+    selectedRoom: null,
+    assignScp: null,
+    selectedScpInfo: null,
+    demolishMode: false,
+    hover: null,
+    cellSize: 40,
+    lastFrame: performance.now(),
+    research: null,
+    expedition: null,
+    breaches: [],
+    alarmUntil: 0,
+    testParticles: [],
+  };
+
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const viewport = document.getElementById('viewport');
+  const roomListEl = document.getElementById('room-list');
+  const staffListEl = document.getElementById('staff-list');
+  const scpListsEl = document.getElementById('scp-lists');
+  const scpDetailEl = document.getElementById('scp-detail');
+  const researchPanel = document.getElementById('research-panel');
+  const expeditionPanel = document.getElementById('expedition-panel');
+  const demolishBtn = document.getElementById('demolish-btn');
+  const statMoney = document.getElementById('stat-money');
+  const statIncome = document.getElementById('stat-income');
+  const statDay = document.getElementById('stat-day');
+  const statChips = document.getElementById('stat-chips');
+  const toastContainer = document.getElementById('toast-container');
+  const resetBtn = document.getElementById('reset-btn');
+  const saveBtn = document.getElementById('save-btn');
+  const statusPill = document.getElementById('status-pill');
+  const statusText = document.getElementById('status-text');
+  const expeditionBtn = document.getElementById('expedition-btn');
+  const recontainBtn = document.getElementById('recontain-btn');
+
+  let lastIncome = 0;
+
+  function fmtMoney(n){ return '$' + Math.max(0, Math.round(n)).toLocaleString('en-US'); }
+  function roomById(id){ return ROOMS.find(r => r.id === id); }
+  function staffById(id){ return STAFF.find(s => s.id === id); }
+  function scpById(id){ return SCPS.find(s => s.id === id); }
+
+  function showToast(message, type){
+    const t = document.createElement('div');
+    t.className = 'toast' + (type === 'error' ? ' error' : type === 'success' ? ' success' : '');
+    t.textContent = message;
+    toastContainer.appendChild(t);
+    setTimeout(()=>{ t.classList.add('fade'); setTimeout(()=> t.remove(), 260); }, 2800);
+  }
+
+  function staffCount(id){ return state.staff.filter(s => s.type === id).length; }
+
+  function roomCount(id){
+    let c = 0;
+    for (let r=0;r<ROWS;r++) for (let c2=0;c2<COLS;c2++) if (state.grid[r][c2] === id) c++;
+    return c;
+  }
+
+  function securityLevel(){
+    return staffCount('mtf') * 2 + staffCount('security') + roomCount('security') + roomCount('control') * 0.5;
+  }
+
+  function scpInstance(scpId){
+    return state.scps.find(s => s.scpId === scpId && !s.breached);
+  }
+
+  function scpAtCell(row, col){
+    return state.scps.find(s => s.row === row && s.col === col && !s.breached);
+  }
+
+  function containedCount(cls){
+    return state.scps.filter(s => !s.breached && scpById(s.scpId).cls === cls).length;
+  }
+
+  function canRoomHold(roomId, cls){
+    const room = roomById(roomId);
+    if (!room || !room.holds) return false;
+    return room.holds.includes(cls);
+  }
+
+  function triggerAlarm(duration){
+    state.alarmUntil = Math.max(state.alarmUntil, performance.now() + duration);
+    viewport.classList.add('alarm');
+    statusPill.classList.add('breach');
+    statusText.textContent = 'Breach Alert';
+  }
+
+  function clearAlarmIfNeeded(){
+    if (performance.now() >= state.alarmUntil && state.breaches.length === 0){
+      viewport.classList.remove('alarm');
+      statusPill.classList.remove('breach');
+      statusText.textContent = 'Operational';
+    }
+  }
+
+  /* ---------- SIDEBAR ---------- */
+
+  function renderRoomList(){
+    roomListEl.innerHTML = '';
+    ROOMS.forEach(room => {
+      const btn = document.createElement('button');
+      btn.className = 'item-btn' + (state.selectedRoom === room.id ? ' selected' : '');
+      const zoneLabel = room.zone === 'heavy' ? ' · Heavy CZ' : room.zone === 'medium' ? ' · Med CZ' : '';
+      btn.innerHTML = `
+        <span class="swatch" style="background:${room.color}"></span>
+        <span class="item-text">
+          <span class="name">${room.name}</span>
+          <span class="meta">${fmtMoney(room.cost)}${zoneLabel}</span>
+        </span>
+        <span class="item-badge owned">${roomCount(room.id)}</span>`;
+      btn.addEventListener('click', () => {
+        state.demolishMode = false;
+        state.assignScp = null;
+        state.selectedRoom = (state.selectedRoom === room.id) ? null : room.id;
+        renderRoomList(); renderDemolishBtn(); renderScpLists();
+      });
+      roomListEl.appendChild(btn);
+    });
+  }
+
+  function renderDemolishBtn(){ demolishBtn.classList.toggle('active', state.demolishMode); }
+
+  function renderStaffList(){
+    staffListEl.innerHTML = '';
+    STAFF.forEach(s => {
+      const btn = document.createElement('button');
+      btn.className = 'item-btn';
+      btn.disabled = state.money < s.cost;
+      btn.innerHTML = `
+        <span class="swatch dot" style="background:${s.color}"></span>
+        <span class="item-text"><span class="name">${s.name}</span><span class="meta">${fmtMoney(s.cost)} to hire</span></span>
+        <span class="item-badge owned">${staffCount(s.id)}</span>`;
+      btn.addEventListener('click', () => hireStaff(s.id));
+      staffListEl.appendChild(btn);
+    });
+    renderStatChips();
+  }
+
+  function renderStatChips(){
+    const sec = Math.floor(securityLevel());
+    const cd = staffCount('classd');
+    const riotRisk = cd > sec;
+    statChips.innerHTML = `
+      <span class="chip">Staff <b>${state.staff.length}</b></span>
+      <span class="chip${riotRisk ? ' warn' : ''}">Security <b>${sec}</b></span>
+      <span class="chip">SCPs <b>${state.scps.filter(s=>!s.breached).length}</b></span>
+      <span class="chip">Safe <b>${containedCount('safe')}</b></span>
+      <span class="chip">Euclid <b>${containedCount('euclid')}</b></span>
+      <span class="chip">Keter <b>${containedCount('keter')}</b></span>`;
+  }
+
+  function renderScpLists(){
+    scpListsEl.innerHTML = '';
+    CLASS_ORDER.forEach(cls => {
+      const header = document.createElement('div');
+      header.className = 'class-header ' + cls;
+      header.textContent = CLASS_LABEL[cls] + ' Class';
+      scpListsEl.appendChild(header);
+
+      const list = document.createElement('div');
+      list.className = 'item-list';
+      SCPS.filter(s => s.cls === cls).forEach(scp => {
+        const unlocked = state.unlocked.includes(scp.id);
+        const inst = scpInstance(scp.id);
+        const inInv = state.inventory.includes(scp.id);
+        const breached = state.breaches.some(b => b.scpId === scp.id);
+        const btn = document.createElement('button');
+        btn.className = 'item-btn' + (state.assignScp === scp.id ? ' selected' : '') +
+          (inst ? ' contained' : '') + (breached ? ' breached' : '') + (!unlocked && !inInv ? ' locked' : '');
+
+        let meta = unlocked ? fmtMoney(scp.cost) + ' · +' + scp.income + '/s' : 'Research required';
+        if (inst) meta = 'Contained · +' + scp.income + '/s';
+        if (inInv && !inst) meta = 'In storage — click to assign';
+        if (breached) meta = 'BREACHED — deploy MTF';
+
+        btn.innerHTML = `
+          <span class="swatch" style="background:${scp.color}"></span>
+          <span class="item-text"><span class="name">${scp.num}</span><span class="meta">${meta}</span></span>
+          <span class="class-tag ${cls}">${CLASS_LABEL[cls]}</span>`;
+
+        btn.addEventListener('click', () => selectScp(scp.id));
+        list.appendChild(btn);
+      });
+      scpListsEl.appendChild(list);
+    });
+    renderScpDetail();
+  }
+
+  function renderScpDetail(){
+    const id = state.selectedScpInfo;
+    if (!id){ scpDetailEl.style.display = 'none'; return; }
+    const scp = scpById(id);
+    if (!scp) return;
+    scpDetailEl.style.display = 'block';
+    const inst = scpInstance(id);
+    const need = scp.cls === 'keter' ? 'Heavy Containment' : 'Containment Cell';
+    scpDetailEl.innerHTML = `
+      <h4>${scp.num} — ${scp.name}</h4>
+      <p>${scp.desc}</p>
+      <p style="margin-top:8px"><b>Requires:</b> ${need} · Research: ${scp.research ? fmtMoney(scp.research) : 'None'}</p>
+      ${inst ? '<p style="color:var(--accent-2)">Status: Securely contained</p>' : ''}`;
+  }
+
+  function selectScp(scpId){
+    const scp = scpById(scpId);
+    state.selectedScpInfo = scpId;
+    state.selectedRoom = null;
+    state.demolishMode = false;
+    renderRoomList(); renderDemolishBtn();
+
+    if (state.breaches.some(b => b.scpId === scpId)){
+      showToast(scp.num + ' is breached! Use MTF Recontainment.', 'error');
+      renderScpLists();
+      return;
+    }
+
+    if (state.inventory.includes(scpId) || (state.unlocked.includes(scpId) && !scpInstance(scpId))){
+      if (state.money < scp.cost && !state.inventory.includes(scpId)){
+        showToast('Need ' + fmtMoney(scp.cost) + ' to acquire ' + scp.num + '.', 'error');
+      } else {
+        state.assignScp = (state.assignScp === scpId) ? null : scpId;
+        if (state.assignScp) showToast('Click a ' + (scp.cls === 'keter' ? 'Heavy' : '') + ' containment tile for ' + scp.num + '.');
+      }
+    } else if (!state.unlocked.includes(scpId)){
+      showToast('Research ' + scp.num + ' in the Ops tab first.', 'error');
+    }
+    renderScpLists();
+  }
+
+  function renderOpsPanels(){
+    if (state.research){
+      const scp = scpById(state.research.scpId);
+      const pct = Math.min(100, (1 - state.research.remaining / RESEARCH_MS) * 100);
+      researchPanel.innerHTML = `
+        <div class="hint-box">Researching <b>${scp.num}</b> in Lab…
+          <div class="progress-bar"><div class="fill" style="width:${pct}%"></div></div>
+        </div>`;
+    } else {
+      const available = SCPS.filter(s => !state.unlocked.includes(s.id));
+      if (available.length === 0){
+        researchPanel.innerHTML = '<div class="hint-box">All anomalies catalogued.</div>';
+      } else {
+        researchPanel.innerHTML = '<div class="item-list" id="research-list"></div>';
+        const list = document.getElementById('research-list');
+        available.forEach(scp => {
+          const btn = document.createElement('button');
+          btn.className = 'item-btn';
+          const canResearch = roomCount('lab') > 0 && state.money >= scp.research && !state.research;
+          btn.disabled = !canResearch;
+          btn.innerHTML = `
+            <span class="class-tag ${scp.cls}">${CLASS_LABEL[scp.cls]}</span>
+            <span class="item-text"><span class="name">${scp.num}</span><span class="meta">${fmtMoney(scp.research)} · needs Lab</span></span>`;
+          btn.addEventListener('click', () => startResearch(scp.id));
+          list.appendChild(btn);
+        });
+      }
+    }
+
+    if (state.expedition){
+      const pct = Math.min(100, (1 - state.expedition.remaining / EXPEDITION_MS) * 100);
+      expeditionPanel.innerHTML = `
+        <div class="hint-box" style="margin-top:8px">MTF in field… ETA ${Math.ceil(state.expedition.remaining/1000)}s
+          <div class="progress-bar"><div class="fill" style="width:${pct}%"></div></div>
+        </div>`;
+      expeditionBtn.disabled = true;
+    } else {
+      expeditionPanel.innerHTML = '';
+      expeditionBtn.disabled = state.money < EXPEDITION_COST || staffCount('mtf') < 1;
+    }
+
+    recontainBtn.disabled = state.breaches.length === 0 || state.money < RECONTAIN_COST || staffCount('mtf') < 1;
+  }
+
+  /* ---------- ACTIONS ---------- */
+
+  function isPlaceable(row, col){
+    if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return false;
+    if (row === ENTRANCE.row && col === ENTRANCE.col) return false;
+    return state.grid[row][col] === null;
+  }
+
+  function placeRoom(row, col, roomId){
+    const room = roomById(roomId);
+    if (!room || !isPlaceable(row, col)) { showToast('Cannot build here.', 'error'); return; }
+    if (state.money < room.cost){ showToast('Insufficient funds.', 'error'); return; }
+    state.money -= room.cost;
+    state.grid[row][col] = room.id;
+    showToast(room.name + ' constructed.', 'success');
+    renderAll();
+  }
+
+  function demolishTile(row, col){
+    if (row === ENTRANCE.row && col === ENTRANCE.col) return;
+    const scp = scpAtCell(row, col);
+    if (scp){
+      showToast('Cannot demolish — SCP contained here.', 'error');
+      return;
+    }
+    if (state.grid[row][col] === null) return;
+    state.grid[row][col] = null;
+    showToast('Room demolished.');
+    renderAll();
+  }
+
+  function tryAssignScp(row, col){
+    if (!state.assignScp) return false;
+    const scp = scpById(state.assignScp);
+    const roomId = state.grid[row][col];
+    if (!roomId || !canRoomHold(roomId, scp.cls)){
+      showToast('Incompatible containment — need ' + (scp.cls === 'keter' ? 'Heavy Cell' : 'Containment Cell') + '.', 'error');
+      return true;
+    }
+    if (scpAtCell(row, col)){
+      showToast('Cell already occupied.', 'error');
+      return true;
+    }
+    const fromInv = state.inventory.includes(scp.id);
+    if (!fromInv && state.money < scp.cost){
+      showToast('Need ' + fmtMoney(scp.cost) + ' to acquire.', 'error');
+      return true;
+    }
+    if (!fromInv) state.money -= scp.cost;
+    else state.inventory = state.inventory.filter(id => id !== scp.id);
+
+    state.scps.push({ scpId: scp.id, row, col, breached: false, testCooldown: 0 });
+    state.assignScp = null;
+    showToast(scp.num + ' contained successfully!', 'success');
+    renderAll();
+    return true;
+  }
+
+  function entrancePixel(){
+    return { x: ENTRANCE.col * state.cellSize + state.cellSize/2, y: ENTRANCE.row * state.cellSize + state.cellSize/2 };
+  }
+
+  function hireStaff(typeId){
+    const type = staffById(typeId);
+    if (!type || state.money < type.cost){ showToast('Insufficient funds.', 'error'); renderStaffList(); return; }
+    state.money -= type.cost;
+    const ep = entrancePixel();
+    const dot = {
+      type: type.id, color: type.color,
+      x: ep.x + (Math.random()*10 - 5), y: ep.y + (Math.random()*10 - 5),
+      targetX: ep.x, targetY: ep.y,
+      speed: 28 + Math.random()*20, pauseUntil: 0,
+      task: null, injured: false,
+    };
+    assignStaffTask(dot);
+    state.staff.push(dot);
+    showToast(type.name + ' hired.', 'success');
+    renderAll();
+  }
+
+  function cellCenter(row, col){
+    return { x: col * state.cellSize + state.cellSize/2, y: row * state.cellSize + state.cellSize/2 };
+  }
+
+  function assignStaffTask(dot){
+    const type = staffById(dot.type);
+    if (dot.injured && staffCount('doctor') > 0){
+      const docs = state.staff.filter(s => s.type === 'doctor');
+      if (docs.length) { const d = docs[0]; dot.task = { kind:'heal', target:d }; return; }
+    }
+
+    if (type.role === 'research' || type.role === 'labor'){
+      const cells = state.scps.filter(s => !s.breached);
+      if (cells.length){
+        const pick = cells[Math.floor(Math.random() * cells.length)];
+        dot.task = { kind:'test', row:pick.row, col:pick.col };
+        const c = cellCenter(pick.row, pick.col);
+        dot.targetX = c.x + (Math.random()*8-4);
+        dot.targetY = c.y + (Math.random()*8-4);
+        return;
+      }
+    }
+
+    if (type.role === 'security' && state.breaches.length){
+      const b = state.breaches[0];
+      dot.task = { kind:'breach', scpId: b.scpId };
+      dot.targetX = canvas.width * 0.5 + Math.random()*40-20;
+      dot.targetY = canvas.height * 0.5 + Math.random()*40-20;
+      return;
+    }
+
+    if (type.role === 'research' && roomCount('lab') > 0){
+      for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++){
+        if (state.grid[r][c] === 'lab'){
+          const cen = cellCenter(r,c);
+          dot.task = { kind:'lab', row:r, col:c };
+          dot.targetX = cen.x; dot.targetY = cen.y;
+          return;
+        }
+      }
+    }
+
+    pickWanderTarget(dot);
+  }
+
+  function pickWanderTarget(dot){
+    dot.task = { kind:'wander' };
+    const col = Math.floor(Math.random()*COLS);
+    const row = Math.floor(Math.random()*ROWS);
+    dot.targetX = col * state.cellSize + state.cellSize/2 + (Math.random()*10-5);
+    dot.targetY = row * state.cellSize + state.cellSize/2 + (Math.random()*10-5);
+  }
+
+  function startResearch(scpId){
+    const scp = scpById(scpId);
+    if (!scp || state.research || roomCount('lab') === 0) return;
+    if (state.money < scp.research){ showToast('Insufficient research funds.', 'error'); return; }
+    state.money -= scp.research;
+    state.research = { scpId, remaining: RESEARCH_MS };
+    showToast('Research initiated: ' + scp.num);
+    renderOpsPanels(); updateTopbar();
+  }
+
+  function startExpedition(){
+    if (state.expedition || state.money < EXPEDITION_COST || staffCount('mtf') < 1) return;
+    state.money -= EXPEDITION_COST;
+    state.expedition = { remaining: EXPEDITION_MS };
+    showToast('MTF expedition deployed…');
+    renderOpsPanels(); updateTopbar();
+  }
+
+  function completeExpedition(){
+    const locked = SCPS.filter(s => !state.unlocked.includes(s.id) && !state.inventory.includes(s.id) && !scpInstance(s.id));
+    const pool = locked.length ? locked : SCPS.filter(s => !scpInstance(s.id) && !state.inventory.includes(s.id));
+    if (!pool.length){ showToast('Expedition returned empty-handed.'); return; }
+    const found = pool[Math.floor(Math.random() * pool.length)];
+    state.inventory.push(found.id);
+    if (!state.unlocked.includes(found.id)) state.unlocked.push(found.id);
+    showToast('MTF recovered ' + found.num + '! Assign to containment.', 'success');
+    renderScpLists(); renderOpsPanels();
+  }
+
+  function deployRecontain(){
+    if (!state.breaches.length || state.money < RECONTAIN_COST || staffCount('mtf') < 1) return;
+    state.money -= RECONTAIN_COST;
+    const b = state.breaches.shift();
+    const scp = scpById(b.scpId);
+    state.scps.push({ scpId: b.scpId, row: b.row, col: b.col, breached: false, testCooldown: 0 });
+    showToast(scp.num + ' recontained by MTF Epsilon-11.', 'success');
+    if (!state.breaches.length){
+      state.alarmUntil = 0;
+      viewport.classList.remove('alarm');
+      statusPill.classList.remove('breach');
+      statusText.textContent = 'Operational';
+    }
+    renderAll();
+  }
+
+  function triggerBreach(scpInst){
+    const scp = scpById(scpInst.scpId);
+    scpInst.breached = true;
+    state.breaches.push({ scpId: scpInst.scpId, row: scpInst.row, col: scpInst.col });
+    state.scps = state.scps.filter(s => s !== scpInst);
+    triggerAlarm(8000);
+    showToast('CONTAINMENT BREACH: ' + scp.num + '!', 'error');
+
+    if (scp.cls !== 'safe' && Math.random() < 0.35){
+      const victims = state.staff.filter(s => s.type === 'classd');
+      if (victims.length){
+        const v = victims[Math.floor(Math.random() * victims.length)];
+        state.staff = state.staff.filter(s => s !== v);
+        showToast('Class-D casualty during ' + scp.num + ' breach.', 'error');
+      }
+    }
+    renderAll();
+  }
+
+  function resetGame(){
+    state.money = START_MONEY;
+    state.day = 1;
+    state.grid = Array.from({length:ROWS}, ()=>Array(COLS).fill(null));
+    state.staff = [];
+    state.scps = [];
+    state.unlocked = ['scp999','scp131'];
+    state.inventory = [];
+    state.selectedRoom = null;
+    state.assignScp = null;
+    state.selectedScpInfo = null;
+    state.demolishMode = false;
+    state.research = null;
+    state.expedition = null;
+    state.breaches = [];
+    state.alarmUntil = 0;
+    state.testParticles = [];
+    viewport.classList.remove('alarm');
+    statusPill.classList.remove('breach');
+    statusText.textContent = 'Operational';
+    renderAll();
+    showToast('Facility reset.');
+  }
+
+  function saveGame(){
+    try {
+      const data = {
+        money: state.money, day: state.day, grid: state.grid,
+        staff: state.staff.map(s => ({ type:s.type, x:s.x, y:s.y, injured:s.injured })),
+        scps: state.scps, unlocked: state.unlocked, inventory: state.inventory,
+        research: state.research, expedition: state.expedition, breaches: state.breaches,
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+      showToast('Progress saved.', 'success');
+    } catch(e){ showToast('Save failed.', 'error'); }
+  }
+
+  function loadGame(){
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      state.money = data.money ?? START_MONEY;
+      state.day = data.day ?? 1;
+      state.grid = data.grid ?? state.grid;
+      state.staff = (data.staff ?? []).map(s => ({
+        ...s, color: staffById(s.type).color, targetX:s.x, targetY:s.y,
+        speed:30, pauseUntil:0, task:{kind:'wander'},
+      }));
+      state.scps = data.scps ?? [];
+      state.unlocked = data.unlocked ?? ['scp999','scp131'];
+      state.inventory = data.inventory ?? [];
+      state.research = data.research ?? null;
+      state.expedition = data.expedition ?? null;
+      state.breaches = data.breaches ?? [];
+      return true;
+    } catch(e){ return false; }
+  }
+
+  function renderAll(){
+    renderRoomList(); renderStaffList(); renderScpLists(); renderOpsPanels(); updateTopbar();
+  }
+
+  function updateTopbar(){
+    statMoney.childNodes[0].nodeValue = fmtMoney(state.money);
+    statIncome.textContent = lastIncome > 0 ? ('+' + fmtMoney(lastIncome) + '/s') : '';
+    statDay.textContent = state.day;
+    renderStatChips();
+  }
+
+  /* ---------- ECONOMY & EVENTS ---------- */
+
+  function economyTick(){
+    let income = 0;
+    const sci = staffCount('scientist');
+    const cd = staffCount('classd');
+    const eng = staffCount('engineer');
+    const ctrl = roomCount('control');
+    const bonus = 1 + eng * 0.05 + ctrl * 0.1;
+
+    state.scps.filter(s => !s.breached).forEach(inst => {
+      const scp = scpById(inst.scpId);
+      const staffNear = state.staff.some(st => {
+        const col = Math.floor(st.x / state.cellSize);
+        const row = Math.floor(st.y / state.cellSize);
+        return (st.type === 'scientist' || st.type === 'classd') &&
+          Math.abs(row - inst.row) <= 1 && Math.abs(col - inst.col) <= 1;
+      });
+      if (staffNear && sci > 0 && cd > 0) income += scp.income * bonus;
+    });
+
+    lastIncome = income;
+    state.money += income;
+
+    state.scps.filter(s => !s.breached).forEach(inst => {
+      const scp = scpById(inst.scpId);
+      const sec = securityLevel();
+      const breachMod = Math.max(0.3, 1 - sec * 0.04);
+      if (Math.random() < scp.breach * breachMod * 0.15) triggerBreach(inst);
+    });
+
+    if (state.research){
+      state.research.remaining -= TICK_MS;
+      if (state.research.remaining <= 0){
+        const id = state.research.scpId;
+        if (!state.unlocked.includes(id)) state.unlocked.push(id);
+        showToast(scpById(id).num + ' research complete — now acquirable!', 'success');
+        state.research = null;
+      }
+    }
+
+    if (state.expedition){
+      state.expedition.remaining -= TICK_MS;
+      if (state.expedition.remaining <= 0){
+        state.expedition = null;
+        completeExpedition();
+      }
+    }
+
+    updateTopbar();
+    renderOpsPanels();
+    clearAlarmIfNeeded();
+  }
+
+  function dayTick(){
+    state.day += 1;
+    const upkeep = state.staff.length * UPKEEP_PER_STAFF;
+    if (upkeep > 0){
+      state.money = Math.max(0, state.money - upkeep);
+      showToast('Day ' + state.day + ' — upkeep ' + fmtMoney(upkeep));
+    }
+
+    const cd = staffCount('classd');
+    const sec = securityLevel();
+    if (cd > sec && cd >= 3 && Math.random() < 0.35){
+      showToast('Class-D riot! Security overwhelmed.', 'error');
+      state.money = Math.max(0, state.money - 200);
+      const victims = state.staff.filter(s => s.type === 'classd').slice(0, Math.min(2, cd - sec));
+      state.staff = state.staff.filter(s => !victims.includes(s));
+    }
+
+    updateTopbar();
+  }
+
+  function runTests(dt){
+    state.scps.filter(s => !s.breached).forEach(inst => {
+      inst.testCooldown = (inst.testCooldown || 0) - dt;
+      if (inst.testCooldown > 0) return;
+
+      const scp = scpById(inst.scpId);
+      const sciHere = state.staff.some(st => st.type === 'scientist' &&
+        Math.floor(st.x/state.cellSize) === inst.col && Math.floor(st.y/state.cellSize) === inst.row);
+      const cdHere = state.staff.some(st => st.type === 'classd' &&
+        Math.abs(Math.floor(st.x/state.cellSize) - inst.col) <= 1 &&
+        Math.abs(Math.floor(st.y/state.cellSize) - inst.row) <= 1);
+
+      if (sciHere && cdHere){
+        inst.testCooldown = 3 + Math.random() * 4;
+        state.testParticles.push({
+          x: inst.col * state.cellSize + state.cellSize/2,
+          y: inst.row * state.cellSize + state.cellSize/2,
+          life: 1, color: scp.color,
+        });
+        if (scp.cls === 'keter' && Math.random() < 0.08){
+          const cds = state.staff.filter(st => st.type === 'classd' &&
+            Math.abs(Math.floor(st.x/state.cellSize) - inst.col) <= 1);
+          if (cds.length){
+            state.staff = state.staff.filter(s => s !== cds[0]);
+            showToast('Class-D lost during ' + scp.num + ' test.', 'error');
+          }
+        }
+      }
+    });
+
+    state.testParticles = state.testParticles.filter(p => {
+      p.life -= dt * 0.8;
+      p.y -= dt * 12;
+      return p.life > 0;
+    });
+  }
+
+  /* ---------- CANVAS ---------- */
+
+  function resizeCanvas(){
+    const rect = viewport.getBoundingClientRect();
+    const pad = 24;
+    state.cellSize = Math.max(20, Math.floor(Math.min((rect.width-pad)/COLS, (rect.height-pad)/ROWS)));
+    canvas.width = state.cellSize * COLS;
+    canvas.height = state.cellSize * ROWS;
+  }
+
+  function canvasToCell(clientX, clientY){
+    const rect = canvas.getBoundingClientRect();
+    return {
+      row: Math.floor((clientY - rect.top) / state.cellSize),
+      col: Math.floor((clientX - rect.left) / state.cellSize),
+    };
+  }
+
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  function zoneTint(row, col){
+    const roomId = state.grid[row][col];
+    if (!roomId) return null;
+    const room = roomById(roomId);
+    if (!room) return null;
+    if (room.zone === 'heavy') return 'rgba(92,32,32,0.12)';
+    if (room.zone === 'medium') return 'rgba(47,111,109,0.08)';
+    return null;
+  }
+
+  function drawGrid(){
+    ctx.fillStyle = '#121419';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++){
+      const tint = zoneTint(r,c);
+      if (tint){ ctx.fillStyle = tint; ctx.fillRect(c*state.cellSize, r*state.cellSize, state.cellSize, state.cellSize); }
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,0.045)';
+    ctx.lineWidth = 1;
+    for (let c=0;c<=COLS;c++){ ctx.beginPath(); ctx.moveTo(c*state.cellSize+.5,0); ctx.lineTo(c*state.cellSize+.5,canvas.height); ctx.stroke(); }
+    for (let r=0;r<=ROWS;r++){ ctx.beginPath(); ctx.moveTo(0,r*state.cellSize+.5); ctx.lineTo(canvas.width,r*state.cellSize+.5); ctx.stroke(); }
+  }
+
+  function drawRoomTile(row, col, color, abbr){
+    const s = state.cellSize, x = col*s, y = row*s, pad = Math.max(2, s*0.07);
+    ctx.fillStyle = color;
+    roundRect(x+pad, y+pad, s-pad*2, s-pad*2, 4);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    roundRect(x+pad, y+pad, s-pad*2, s-pad*2, 4);
+    ctx.stroke();
+    if (s > 26){
+      ctx.fillStyle = 'rgba(255,255,255,0.82)';
+      ctx.font = `600 ${Math.max(9, s*0.24)}px 'JetBrains Mono', monospace`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(abbr, x+s/2, y+s/2);
+    }
+  }
+
+  function drawScpInCell(row, col, scp){
+    const s = state.cellSize, x = col*s + s/2, y = row*s + s/2;
+    const r = s * 0.22;
+    ctx.save();
+    ctx.shadowColor = scp.color;
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI*2);
+    ctx.fillStyle = scp.color;
+    ctx.fill();
+    ctx.restore();
+    if (s > 28){
+      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.font = `700 ${Math.max(7,s*0.16)}px 'JetBrains Mono', monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillText(scp.num.replace('SCP-',''), x, y + r + 8);
+    }
+  }
+
+  function drawEntrance(){ drawRoomTile(ENTRANCE.row, ENTRANCE.col, '#2f6b52', 'IN'); }
+
+  function drawHoverHighlight(){
+    if (!state.hover) return;
+    const { row, col } = state.hover;
+    if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return;
+    let color = null;
+    if (state.demolishMode){
+      const occupied = state.grid[row][col] !== null && !(row===ENTRANCE.row && col===ENTRANCE.col);
+      color = occupied ? 'rgba(224,96,90,0.9)' : 'rgba(224,96,90,0.25)';
+    } else if (state.assignScp){
+      const scp = scpById(state.assignScp);
+      const roomId = state.grid[row][col];
+      const ok = roomId && canRoomHold(roomId, scp.cls) && !scpAtCell(row,col);
+      color = ok ? 'rgba(69,201,189,0.9)' : 'rgba(224,96,90,0.6)';
+    } else if (state.selectedRoom){
+      const room = roomById(state.selectedRoom);
+      const ok = isPlaceable(row,col) && state.money >= room.cost;
+      color = ok ? 'rgba(69,201,189,0.9)' : 'rgba(224,96,90,0.6)';
+    } else return;
+    const s = state.cellSize;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(col*s+1, row*s+1, s-2, s-2);
+  }
+
+  function drawDots(){
+    [...state.staff].sort((a,b)=>a.y-b.y).forEach(dot => {
+      const r = Math.max(4, state.cellSize*0.17);
+      ctx.save();
+      ctx.shadowColor = dot.color;
+      ctx.shadowBlur = 7;
+      ctx.beginPath();
+      ctx.arc(dot.x, dot.y, r, 0, Math.PI*2);
+      ctx.fillStyle = dot.color;
+      ctx.fill();
+      ctx.restore();
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+      ctx.stroke();
+    });
+  }
+
+  function drawParticles(){
+    state.testParticles.forEach(p => {
+      ctx.globalAlpha = p.life;
+      ctx.fillStyle = p.color;
+      ctx.font = `600 ${Math.max(8, state.cellSize*0.18)}px 'JetBrains Mono', monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillText('+$', p.x, p.y);
+      ctx.globalAlpha = 1;
+    });
+  }
+
+  function drawBreachOverlay(){
+    if (!state.breaches.length) return;
+    ctx.fillStyle = 'rgba(224,96,90,0.15)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgba(224,96,90,0.9)';
+    ctx.font = `700 ${Math.max(12, state.cellSize*0.35)}px 'JetBrains Mono', monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillText('⚠ BREACH IN PROGRESS', canvas.width/2, state.cellSize * 0.8);
+  }
+
+  function render(){
+    drawGrid();
+    for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++){
+      const val = state.grid[r][c];
+      if (val){ const room = roomById(val); drawRoomTile(r,c,room.color,room.abbr); }
+    }
+    state.scps.filter(s => !s.breached).forEach(inst => {
+      const scp = scpById(inst.scpId);
+      drawScpInCell(inst.row, inst.col, scp);
+    });
+    drawEntrance();
+    drawHoverHighlight();
+    drawParticles();
+    drawBreachOverlay();
+    drawDots();
+  }
+
+  function update(dt){
+    state.staff.forEach(dot => {
+      const now = performance.now();
+      if (now < dot.pauseUntil) return;
+      const dx = dot.targetX - dot.x, dy = dot.targetY - dot.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 3){
+        dot.pauseUntil = now + 300 + Math.random()*900;
+        if (dot.task && dot.task.kind === 'test'){
+          const c = cellCenter(dot.task.row, dot.task.col);
+          dot.targetX = c.x + (Math.random()*10-5);
+          dot.targetY = c.y + (Math.random()*10-5);
+        } else {
+          assignStaffTask(dot);
+        }
+        return;
+      }
+      const step = dot.speed * dt;
+      dot.x += (dx/dist) * Math.min(step, dist);
+      dot.y += (dy/dist) * Math.min(step, dist);
+    });
+    runTests(dt);
+  }
+
+  function loop(now){
+    const dt = Math.min(0.05, (now - state.lastFrame) / 1000);
+    state.lastFrame = now;
+    update(dt);
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  /* ---------- EVENTS ---------- */
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  demolishBtn.addEventListener('click', () => {
+    state.demolishMode = !state.demolishMode;
+    if (state.demolishMode){ state.selectedRoom = null; state.assignScp = null; }
+    renderDemolishBtn(); renderRoomList(); renderScpLists();
+  });
+
+  canvas.addEventListener('click', (e) => {
+    const { row, col } = canvasToCell(e.clientX, e.clientY);
+    if (state.assignScp){ tryAssignScp(row, col); return; }
+    if (state.demolishMode) demolishTile(row, col);
+    else if (state.selectedRoom) placeRoom(row, col, state.selectedRoom);
+  });
+
+  canvas.addEventListener('mousemove', (e) => { state.hover = canvasToCell(e.clientX, e.clientY); });
+  canvas.addEventListener('mouseleave', () => { state.hover = null; });
+
+  resetBtn.addEventListener('click', () => { if (confirm('Reset the facility? All progress will be lost.')) resetGame(); });
+  saveBtn.addEventListener('click', saveGame);
+  expeditionBtn.addEventListener('click', startExpedition);
+  recontainBtn.addEventListener('click', deployRecontain);
+  window.addEventListener('resize', resizeCanvas);
+
+  function init(){
+    resizeCanvas();
+    if (loadGame()) showToast('Save loaded.', 'success');
+    renderAll();
+    setInterval(economyTick, TICK_MS);
+    setInterval(dayTick, DAY_MS);
+    requestAnimationFrame((t)=>{ state.lastFrame = t; loop(t); });
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
