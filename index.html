@@ -43,27 +43,14 @@
   }
 
   button{font-family:inherit;}
-
   ::selection{background:var(--accent-dim);color:var(--text);}
-
   .mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;}
 
-  #app{
-    display:flex;
-    flex-direction:column;
-    height:100%;
-  }
+  #app{display:flex;flex-direction:column;height:100%;}
 
   #topbar{
-    height:60px;
-    flex:0 0 auto;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:0 20px;
-    background:var(--panel);
-    border-bottom:1px solid var(--border);
-    z-index:5;
+    height:60px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+    padding:0 20px;background:var(--panel);border-bottom:1px solid var(--border);z-index:5;
   }
 
   .brand{display:flex;flex-direction:column;gap:2px;line-height:1;}
@@ -77,14 +64,16 @@
     transition:all .3s;
   }
   .status-pill.breach{border-color:var(--danger);color:var(--danger);background:#2a1515;}
+  .status-pill.warn{border-color:var(--accent);color:var(--accent);background:#241d10;}
   .status-dot{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 6px var(--good);animation:blink 1.7s ease-in-out infinite;}
   .status-pill.breach .status-dot{background:var(--danger);box-shadow:0 0 8px var(--danger);animation:alarm-blink .4s ease-in-out infinite;}
+  .status-pill.warn .status-dot{background:var(--accent);box-shadow:0 0 8px var(--accent);animation:blink 1.1s ease-in-out infinite;}
 
   @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.35;}}
   @keyframes alarm-blink{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.2;transform:scale(1.3);}}
 
   @media (prefers-reduced-motion: reduce){
-    .status-dot,.status-pill.breach .status-dot{animation:none;}
+    .status-dot,.status-pill.breach .status-dot,.status-pill.warn .status-dot{animation:none;}
   }
 
   .stat-cluster{display:flex;align-items:center;gap:22px;}
@@ -112,10 +101,10 @@
 
   .tabs{display:flex;padding:12px 10px 0;gap:2px;flex-wrap:wrap;}
   .tab-btn{
-    flex:1 1 45%;background:transparent;border:none;color:var(--text-muted);
+    flex:1 1 30%;background:transparent;border:none;color:var(--text-muted);
     padding:8px 0;font-size:10px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;
     cursor:pointer;border-radius:var(--radius-sm) var(--radius-sm) 0 0;border-bottom:2px solid transparent;
-    transition:color .15s, border-color .15s;min-width:60px;
+    transition:color .15s, border-color .15s;min-width:56px;
   }
   .tab-btn:hover{color:var(--text);}
   .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
@@ -184,6 +173,7 @@
   .action-btn.danger:hover{border-color:var(--danger);color:var(--danger);}
   .action-btn.mtf{background:#1a2535;border-color:#26405c;}
   .action-btn.mtf:hover{border-color:var(--accent-2);color:var(--accent-2);}
+  .action-btn.active{border-color:var(--accent-2);color:var(--accent-2);background:#152826;}
 
   .stat-chips{display:flex;flex-wrap:wrap;gap:6px;}
   .chip{background:var(--panel-2);border:1px solid var(--border-soft);border-radius:999px;padding:5px 10px;font-size:11px;color:var(--text-muted);display:flex;gap:5px;}
@@ -194,10 +184,7 @@
   .progress-bar{height:6px;background:var(--border-soft);border-radius:999px;overflow:hidden;margin-top:6px;}
   .progress-bar .fill{height:100%;background:var(--accent-2);border-radius:999px;transition:width .2s;}
 
-  .scp-detail{
-    background:var(--panel-2);border:1px solid var(--border);border-radius:var(--radius);
-    padding:10px 11px;font-size:11.5px;line-height:1.55;color:var(--text-muted);
-  }
+  .scp-detail{background:var(--panel-2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 11px;font-size:11.5px;line-height:1.55;color:var(--text-muted);}
   .scp-detail h4{margin:0 0 6px;font-size:12px;color:var(--text);}
 
   #viewport{
@@ -211,9 +198,21 @@
   }
   #viewport::before{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 140px rgba(0,0,0,0.65);z-index:2;}
   #viewport.alarm::before{box-shadow:inset 0 0 140px rgba(0,0,0,0.65), inset 0 0 80px rgba(224,96,90,0.25);animation:alarm-vignette 1s infinite;z-index:3;}
+  #viewport.emergency::before{box-shadow:inset 0 0 140px rgba(0,0,0,0.65), inset 0 0 90px rgba(240,178,60,0.22);animation:emergency-vignette 2.4s infinite;z-index:3;}
   @keyframes alarm-vignette{0%,100%{opacity:1;}50%{opacity:0.5;}}
+  @keyframes emergency-vignette{0%,100%{opacity:1;}50%{opacity:0.6;}}
+  @media (prefers-reduced-motion: reduce){
+    #viewport.alarm::before,#viewport.emergency::before{animation:none;}
+  }
 
   #gameCanvas{display:block;border-radius:4px;box-shadow:0 0 0 1px var(--border), 0 20px 60px rgba(0,0,0,0.5);}
+
+  .dot-tooltip{
+    position:absolute;pointer-events:none;background:var(--panel-2);border:1px solid var(--border);
+    padding:6px 10px;border-radius:6px;font-size:11px;line-height:1.4;color:var(--text);
+    z-index:20;display:none;box-shadow:0 6px 16px rgba(0,0,0,0.4);white-space:nowrap;
+  }
+  .dot-tooltip b{color:var(--accent-2);}
 
   #toast-container{position:absolute;bottom:18px;right:18px;display:flex;flex-direction:column;gap:8px;z-index:10;pointer-events:none;}
   .toast{
@@ -258,13 +257,14 @@
         <button class="tab-btn" data-tab="staff">Staff</button>
         <button class="tab-btn" data-tab="anomalies">SCPs</button>
         <button class="tab-btn" data-tab="ops">Ops</button>
+        <button class="tab-btn" data-tab="power">Power</button>
       </div>
 
       <div class="tab-panel active" id="tab-build">
         <div class="section-title">Facility Rooms</div>
         <div class="item-list" id="room-list"></div>
         <button id="demolish-btn">✕ Demolish Mode</button>
-        <div class="hint-box">Build corridors to connect zones. Heavy Cells hold Keter-class SCPs. Labs unlock new anomalies via research.</div>
+        <div class="hint-box">Build corridors to connect zones — staff can only walk through built rooms and corridors, never bare rock. Heavy Cells hold Keter-class SCPs. Labs unlock new anomalies via research.</div>
       </div>
 
       <div class="tab-panel" id="tab-staff">
@@ -272,7 +272,7 @@
         <div class="item-list" id="staff-list"></div>
         <div class="section-title">Facility Status</div>
         <div class="stat-chips" id="stat-chips"></div>
-        <div class="hint-box">Scientists and Class-D auto-run tests in containment cells. MTF respond to breaches. Keep security above Class-D count to avoid riots.</div>
+        <div class="hint-box">Every worker runs its own AI job cycle — hover a dot on the map to see what it's doing right now. Scientists pair with Class-D for testing, Doctors treat the injured, MTF answer breaches, Engineers fix damage.</div>
       </div>
 
       <div class="tab-panel" id="tab-anomalies">
@@ -288,13 +288,23 @@
         <button class="action-btn mtf" id="expedition-btn">Deploy MTF Expedition</button>
         <div id="expedition-panel"></div>
         <div class="section-title">Emergency</div>
-        <button class="action-btn danger" id="recontain-btn" disabled>Deploy MTF Recontainment</button>
-        <div class="hint-box">Send MTF into the field to recover random anomalies. Research in Labs unlocks higher object classes.</div>
+        <button class="action-btn danger" id="recontain-btn" disabled>Emergency Recontain (paid)</button>
+        <div class="hint-box">MTF automatically respond to breaches from the Barracks. This button pays for an instant contractor recontainment if you can't wait.</div>
+      </div>
+
+      <div class="tab-panel" id="tab-power">
+        <div class="section-title">Power Infrastructure</div>
+        <div class="item-list" id="power-room-list"></div>
+        <button id="overlay-btn" class="action-btn">👁 Power Overlay: OFF</button>
+        <div class="section-title">Grid Status</div>
+        <div class="stat-chips" id="power-chips"></div>
+        <div class="hint-box">Containment and Heavy cells destabilize without power — breach risk rises sharply. Batteries buffer short deficits; Backup Generators kick in automatically once batteries run dry.</div>
       </div>
     </aside>
 
     <main id="viewport">
       <canvas id="gameCanvas"></canvas>
+      <div class="dot-tooltip" id="dot-tooltip"></div>
       <div id="toast-container"></div>
     </main>
   </div>
@@ -304,28 +314,49 @@
 (function(){
   "use strict";
 
+  /* =====================================================================
+     CONFIG
+  ===================================================================== */
+
   const COLS = 16, ROWS = 10;
   const ENTRANCE = { row: Math.floor(ROWS/2), col: 0 };
 
+  const STATE_ENUM = { IDLE:'idle', WALKING:'walking', WAITING:'waiting', WORKING:'working', RETURNING:'returning' };
+
+  // Room definitions. `power` is consumption (positive) or production (negative, i.e. supply).
   const ROOMS = [
-    { id:'corridor',    name:'Corridor',          abbr:'COR', cost:120,  color:'#2a2d33', zone:'light' },
-    { id:'office',      name:'Staff Office',      abbr:'OFF', cost:400,  color:'#3a3f4b', zone:'light' },
-    { id:'breakroom',   name:'Break Room',        abbr:'BRK', cost:350,  color:'#5b4636', zone:'light' },
-    { id:'storage',     name:'Storage',           abbr:'STO', cost:250,  color:'#41454c', zone:'light' },
-    { id:'lab',         name:'Research Lab',      abbr:'LAB', cost:600,  color:'#2f6f6d', zone:'medium' },
-    { id:'security',    name:'Security Post',     abbr:'SEC', cost:500,  color:'#26405c', zone:'medium' },
-    { id:'containment', name:'Containment Cell',  abbr:'CC',  cost:800,  color:'#8b3a3a', zone:'medium', holds:['safe','euclid'] },
-    { id:'heavy',       name:'Heavy Containment', abbr:'HVY', cost:1400, color:'#5c2020', zone:'heavy', holds:['safe','euclid','keter'] },
-    { id:'control',     name:'Control Room',      abbr:'CTL', cost:900,  color:'#1e3a5f', zone:'medium', bonus:0.1 },
+    { id:'corridor',    name:'Corridor',          abbr:'COR', cost:120,  color:'#2a2d33', zone:'light',  power:0 },
+    { id:'office',      name:'Staff Office',      abbr:'OFF', cost:400,  color:'#3a3f4b', zone:'light',  power:2 },
+    { id:'breakroom',   name:'Break Room',        abbr:'BRK', cost:350,  color:'#5b4636', zone:'light',  power:2 },
+    { id:'storage',     name:'Storage',           abbr:'STO', cost:250,  color:'#41454c', zone:'light',  power:1 },
+    { id:'holding',     name:'Holding Cell',      abbr:'HLD', cost:300,  color:'#7a4a1f', zone:'light',  power:1 },
+    { id:'medical',     name:'Medical Bay',       abbr:'MED', cost:450,  color:'#3f7a6b', zone:'medium', power:4 },
+    { id:'barracks',    name:'Barracks',          abbr:'BRX', cost:500,  color:'#423a63', zone:'medium', power:2 },
+    { id:'engineering', name:'Engineering Bay',   abbr:'ENG', cost:400,  color:'#6b5a2a', zone:'light',  power:3 },
+    { id:'lab',         name:'Research Lab',      abbr:'LAB', cost:600,  color:'#2f6f6d', zone:'medium', power:8 },
+    { id:'security',    name:'Security Post',     abbr:'SEC', cost:500,  color:'#26405c', zone:'medium', power:4 },
+    { id:'containment', name:'Containment Cell',  abbr:'CC',  cost:800,  color:'#8b3a3a', zone:'medium', power:10, holds:['safe','euclid'] },
+    { id:'heavy',       name:'Heavy Containment', abbr:'HVY', cost:1400, color:'#5c2020', zone:'heavy',  power:18, holds:['safe','euclid','keter'] },
+    { id:'control',     name:'Control Room',      abbr:'CTL', cost:900,  color:'#1e3a5f', zone:'medium', power:6, bonus:0.1 },
+    { id:'generator',        name:'Power Generator',  abbr:'GEN', cost:900, color:'#c9820a', zone:'medium', power:-50, category:'power' },
+    { id:'electrical',        name:'Electrical Room',  abbr:'ELC', cost:300, color:'#4a7fa5', zone:'light',  power:1,  category:'power', distributionBonus:0.1 },
+    { id:'backup_generator', name:'Backup Generator', abbr:'BAK', cost:700, color:'#8a5a0c', zone:'medium', power:-30, category:'power', backup:true },
+    { id:'battery',          name:'Battery Storage',  abbr:'BAT', cost:500, color:'#4aa5a5', zone:'light',  power:0,  category:'power', capacity:60 },
   ];
 
+  const POWER_PRIORITY = {
+    electrical:1, containment:1, heavy:1, control:2, security:2, medical:2,
+    lab:3, barracks:3, holding:4, engineering:4, office:5, breakroom:6, storage:6, corridor:0,
+  };
+  const BASE_FREE_SUPPLY = 20;
+
   const STAFF = [
-    { id:'classd',     name:'Class-D Personnel', cost:100, color:'#f5943a', role:'labor' },
-    { id:'scientist',  name:'Scientist',         cost:250, color:'#f2f3f0', role:'research' },
-    { id:'doctor',     name:'Doctor',            cost:300, color:'#5b6b7c', role:'medical' },
-    { id:'security',   name:'Security Guard',    cost:200, color:'#22385a', role:'security' },
-    { id:'mtf',        name:'MTF Operative',     cost:400, color:'#787f89', role:'security' },
-    { id:'engineer',   name:'Engineer',          cost:220, color:'#c9a227', role:'support' },
+    { id:'scientist', name:'Scientist',         cost:250, color:'#f2f3f0' },
+    { id:'classd',    name:'Class-D Personnel', cost:100, color:'#f5943a' },
+    { id:'security',  name:'Security Guard',    cost:200, color:'#22385a' },
+    { id:'engineer',  name:'Engineer',          cost:220, color:'#c9a227' },
+    { id:'doctor',    name:'Doctor',            cost:300, color:'#5b6b7c' },
+    { id:'mtf',       name:'MTF Operative',     cost:400, color:'#787f89' },
   ];
 
   const SCPS = [
@@ -347,7 +378,11 @@
   const EXPEDITION_MS = 18000;
   const RESEARCH_MS = 15000;
   const RECONTAIN_COST = 800;
-  const SAVE_KEY = 'site19_facility_v2';
+  const SAVE_KEY = 'site19_facility_v3';
+
+  /* =====================================================================
+     STATE
+  ===================================================================== */
 
   const state = {
     money: START_MONEY,
@@ -362,29 +397,42 @@
     selectedScpInfo: null,
     demolishMode: false,
     hover: null,
+    hoverDot: null,
     cellSize: 40,
     lastFrame: performance.now(),
     research: null,
     expedition: null,
     breaches: [],
-    alarmUntil: 0,
     testParticles: [],
+    batteryCharge: 0,
+    powerOverlay: false,
+    power: { supply:0, demand:0, deficit:0, batteryCharge:0, batteryCapacity:0, backupActive:false },
   };
+
+  let nextDotId = 1;
+  let lastIncome = 0;
+
+  /* =====================================================================
+     DOM REFS
+  ===================================================================== */
 
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
   const viewport = document.getElementById('viewport');
   const roomListEl = document.getElementById('room-list');
+  const powerRoomListEl = document.getElementById('power-room-list');
   const staffListEl = document.getElementById('staff-list');
   const scpListsEl = document.getElementById('scp-lists');
   const scpDetailEl = document.getElementById('scp-detail');
   const researchPanel = document.getElementById('research-panel');
   const expeditionPanel = document.getElementById('expedition-panel');
   const demolishBtn = document.getElementById('demolish-btn');
+  const overlayBtn = document.getElementById('overlay-btn');
   const statMoney = document.getElementById('stat-money');
   const statIncome = document.getElementById('stat-income');
   const statDay = document.getElementById('stat-day');
   const statChips = document.getElementById('stat-chips');
+  const powerChips = document.getElementById('power-chips');
   const toastContainer = document.getElementById('toast-container');
   const resetBtn = document.getElementById('reset-btn');
   const saveBtn = document.getElementById('save-btn');
@@ -392,8 +440,11 @@
   const statusText = document.getElementById('status-text');
   const expeditionBtn = document.getElementById('expedition-btn');
   const recontainBtn = document.getElementById('recontain-btn');
+  const tooltipEl = document.getElementById('dot-tooltip');
 
-  let lastIncome = 0;
+  /* =====================================================================
+     BASIC HELPERS
+  ===================================================================== */
 
   function fmtMoney(n){ return '$' + Math.max(0, Math.round(n)).toLocaleString('en-US'); }
   function roomById(id){ return ROOMS.find(r => r.id === id); }
@@ -408,29 +459,47 @@
     setTimeout(()=>{ t.classList.add('fade'); setTimeout(()=> t.remove(), 260); }, 2800);
   }
 
+  function roomTypeAt(row, col){
+    const cell = state.grid[row][col];
+    return cell ? cell.type : null;
+  }
+
   function staffCount(id){ return state.staff.filter(s => s.type === id).length; }
 
   function roomCount(id){
     let c = 0;
-    for (let r=0;r<ROWS;r++) for (let c2=0;c2<COLS;c2++) if (state.grid[r][c2] === id) c++;
+    for (let r=0;r<ROWS;r++) for (let c2=0;c2<COLS;c2++){
+      const cell = state.grid[r][c2];
+      if (cell && cell.type === id) c++;
+    }
     return c;
   }
 
+  function cellPowered(row, col){
+    const cell = state.grid[row][col];
+    return cell ? cell.powered !== false : false;
+  }
+
+  function countPowered(type){
+    let n = 0;
+    for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++){
+      const cell = state.grid[r][c];
+      if (cell && cell.type === type && cell.powered !== false) n++;
+    }
+    return n;
+  }
+
+  function hasPoweredRoomOfType(type){ return countPowered(type) > 0; }
+
   function securityLevel(){
-    return staffCount('mtf') * 2 + staffCount('security') + roomCount('security') + roomCount('control') * 0.5;
+    const poweredPosts = countPowered('security');
+    const poweredControl = countPowered('control');
+    return staffCount('mtf') * 2 + staffCount('security') + poweredPosts + poweredControl * 0.5;
   }
 
-  function scpInstance(scpId){
-    return state.scps.find(s => s.scpId === scpId && !s.breached);
-  }
-
-  function scpAtCell(row, col){
-    return state.scps.find(s => s.row === row && s.col === col && !s.breached);
-  }
-
-  function containedCount(cls){
-    return state.scps.filter(s => !s.breached && scpById(s.scpId).cls === cls).length;
-  }
+  function scpInstance(scpId){ return state.scps.find(s => s.scpId === scpId && !s.breached); }
+  function scpAtCell(row, col){ return state.scps.find(s => s.row === row && s.col === col && !s.breached); }
+  function containedCount(cls){ return state.scps.filter(s => !s.breached && scpById(s.scpId).cls === cls).length; }
 
   function canRoomHold(roomId, cls){
     const room = roomById(roomId);
@@ -438,34 +507,622 @@
     return room.holds.includes(cls);
   }
 
-  function triggerAlarm(duration){
-    state.alarmUntil = Math.max(state.alarmUntil, performance.now() + duration);
-    viewport.classList.add('alarm');
-    statusPill.classList.add('breach');
-    statusText.textContent = 'Breach Alert';
+  function cellCenter(row, col){
+    return { x: col * state.cellSize + state.cellSize/2, y: row * state.cellSize + state.cellSize/2 };
   }
 
-  function clearAlarmIfNeeded(){
-    if (performance.now() >= state.alarmUntil && state.breaches.length === 0){
-      viewport.classList.remove('alarm');
-      statusPill.classList.remove('breach');
-      statusText.textContent = 'Operational';
+  function dotTile(dot){
+    const row = Math.min(ROWS-1, Math.max(0, Math.floor(dot.y / state.cellSize)));
+    const col = Math.min(COLS-1, Math.max(0, Math.floor(dot.x / state.cellSize)));
+    return { row, col };
+  }
+
+  function dotSlotOffset(dot){
+    const slot = dot.id % 6;
+    const angle = (slot/6) * Math.PI * 2;
+    const r = state.cellSize * 0.13;
+    return { x: Math.cos(angle)*r, y: Math.sin(angle)*r };
+  }
+
+  /* =====================================================================
+     PATHFINDING (BFS over walkable tiles — walls = unbuilt tiles)
+  ===================================================================== */
+
+  function isWalkable(row, col){
+    if (row === ENTRANCE.row && col === ENTRANCE.col) return true;
+    return state.grid[row][col] !== null;
+  }
+
+  // Finds the nearest tile satisfying predicate(row,col) reachable from (startRow,startCol),
+  // walking only through walkable tiles. Returns {row,col,path} or null. path excludes the start tile.
+  function bfsSearch(startRow, startCol, predicate){
+    const key = (r,c) => r + ',' + c;
+    const startKey = key(startRow, startCol);
+    const visited = new Set([startKey]);
+    const parent = new Map();
+    const queue = [{ row:startRow, col:startCol }];
+    let qi = 0;
+    while (qi < queue.length){
+      const cur = queue[qi++];
+      const isStart = (cur.row === startRow && cur.col === startCol);
+      if (!isStart && predicate(cur.row, cur.col)){
+        const path = [];
+        let node = cur;
+        let k = key(node.row, node.col);
+        while (k !== startKey){
+          path.push(node);
+          const p = parent.get(k);
+          node = p;
+          k = key(node.row, node.col);
+        }
+        path.reverse();
+        return { row: cur.row, col: cur.col, path };
+      }
+      const neighbors = [[cur.row-1,cur.col],[cur.row+1,cur.col],[cur.row,cur.col-1],[cur.row,cur.col+1]];
+      for (const [nr,nc] of neighbors){
+        if (nr<0||nr>=ROWS||nc<0||nc>=COLS) continue;
+        const nk = key(nr,nc);
+        if (visited.has(nk)) continue;
+        if (!isWalkable(nr,nc)) continue;
+        visited.add(nk);
+        parent.set(nk, { row:cur.row, col:cur.col });
+        queue.push({ row:nr, col:nc });
+      }
+    }
+    return null;
+  }
+
+  function bfsPathTo(startRow, startCol, targetRow, targetCol){
+    return bfsSearch(startRow, startCol, (r,c) => r === targetRow && c === targetCol);
+  }
+
+  function nearestRoomTileFrom(tile, type){
+    if (roomCount(type) === 0) return null;
+    const found = bfsSearch(tile.row, tile.col, (r,c) => roomTypeAt(r,c) === type);
+    return found ? { row: found.row, col: found.col } : null;
+  }
+
+  /* =====================================================================
+     POWER SYSTEM
+  ===================================================================== */
+
+  function totalBatteryCapacity(){
+    let cap = 0;
+    const room = roomById('battery');
+    for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++){
+      const cell = state.grid[r][c];
+      if (cell && cell.type === 'battery') cap += (room.capacity||60) * ((cell.health ?? 100)/100);
+    }
+    return cap;
+  }
+
+  function computePower(){
+    let supply = BASE_FREE_SUPPLY, backupSupply = 0, demand = 0, distributionBonus = 0;
+    const cells = [];
+    for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++){
+      const cell = state.grid[r][c];
+      if (!cell) continue;
+      const room = roomById(cell.type);
+      if (!room) continue;
+      cells.push({ row:r, col:c, cell, room });
+      const health = cell.health ?? 100;
+      if (room.power < 0){
+        if (room.backup) backupSupply += (-room.power) * (health/100);
+        else supply += (-room.power) * (health/100);
+      } else {
+        demand += room.power;
+        if (room.id === 'electrical') distributionBonus += (room.distributionBonus||0) * (health/100);
+      }
+    }
+    supply *= (1 + distributionBonus);
+
+    let deficit = demand - supply;
+    let usedBackup = 0;
+    if (deficit > 0){
+      usedBackup = Math.min(deficit, backupSupply);
+      supply += usedBackup;
+      deficit = demand - supply;
+    }
+
+    const capacity = totalBatteryCapacity();
+    if (deficit > 0){
+      const draw = Math.min(deficit, state.batteryCharge);
+      state.batteryCharge -= draw;
+      supply += draw;
+      deficit = demand - supply;
+    } else {
+      const surplus = supply - demand;
+      state.batteryCharge = Math.min(capacity, state.batteryCharge + surplus * 0.5);
+    }
+
+    if (deficit <= 0){
+      cells.forEach(({cell}) => { cell.powered = true; });
+    } else {
+      let budget = Math.max(0, supply);
+      const consumers = cells.filter(o => o.room.power > 0)
+        .sort((a,b) => (POWER_PRIORITY[a.room.id] ?? 9) - (POWER_PRIORITY[b.room.id] ?? 9));
+      consumers.forEach(o => {
+        if (budget >= o.room.power){ o.cell.powered = true; budget -= o.room.power; }
+        else { o.cell.powered = false; }
+      });
+      cells.filter(o => o.room.power <= 0).forEach(o => { o.cell.powered = true; });
+    }
+
+    state.power = {
+      supply, demand, deficit: Math.max(0, deficit),
+      batteryCharge: state.batteryCharge, batteryCapacity: capacity, backupActive: usedBackup > 0,
+    };
+  }
+
+  function degradeRooms(){
+    for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++){
+      const cell = state.grid[r][c];
+      if (!cell) continue;
+      const room = roomById(cell.type);
+      let chance = 0.002;
+      if (room.power < 0) chance = 0.01;
+      if (cell.type === 'containment' || cell.type === 'heavy'){
+        const inst = scpAtCell(r,c);
+        if (inst && scpById(inst.scpId).cls !== 'safe') chance += 0.01;
+      }
+      if (Math.random() < chance){
+        cell.health = Math.max(0, (cell.health ?? 100) - (10 + Math.random()*15));
+      }
     }
   }
 
-  /* ---------- SIDEBAR ---------- */
+  /* =====================================================================
+     NPC MOVEMENT CORE
+  ===================================================================== */
 
-  function renderRoomList(){
-    roomListEl.innerHTML = '';
-    ROOMS.forEach(room => {
+  function makeDot(typeId, x, y){
+    const type = staffById(typeId);
+    return {
+      id: nextDotId++,
+      type: typeId,
+      color: type.color,
+      x, y,
+      path: null, pathIndex: 0,
+      state: STATE_ENUM.IDLE,
+      job: 'idle',
+      onArrive: null, workTimer: null, onWorkDone: null, waitCondition: null, waitUntil: null,
+      speed: 30 + Math.random()*18,
+      injured: false, hp: 100, treatedBy: null, beingHealed: false, followTarget: null,
+    };
+  }
+
+  // Sends a dot toward the nearest built room of one of `types` (tried in order),
+  // falling back to the entrance if nothing is built yet or reachable.
+  function goToRoomOfType(dot, types, jobLabel){
+    const tile = dotTile(dot);
+
+    // Already standing in a qualifying room (e.g. just finished waiting at Barracks
+    // and is deciding again) — bfsSearch excludes the dot's own tile, so without this
+    // check it would wrongly go hunting for a *different* copy of the same room type.
+    // Just stay put.
+    for (const t of types){
+      if (roomTypeAt(tile.row, tile.col) === t){
+        dot.job = jobLabel;
+        dot.state = STATE_ENUM.WAITING;
+        dot.waitUntil = performance.now() + 1200 + Math.random()*1600;
+        return true;
+      }
+    }
+
+    for (const t of types){
+      if (roomCount(t) > 0){
+        const found = bfsSearch(tile.row, tile.col, (r,c) => roomTypeAt(r,c) === t);
+        if (found){
+          dot.job = jobLabel;
+          dot.path = found.path; dot.pathIndex = 0; dot.state = STATE_ENUM.WALKING;
+          dot.onArrive = () => {
+            dot.state = STATE_ENUM.WAITING;
+            dot.job = jobLabel;
+            dot.waitUntil = performance.now() + 1200 + Math.random()*1600;
+          };
+          return true;
+        }
+      }
+    }
+
+    if (tile.row === ENTRANCE.row && tile.col === ENTRANCE.col){
+      dot.job = 'idle at entrance';
+      dot.state = STATE_ENUM.WAITING;
+      dot.waitUntil = performance.now() + 1500;
+      return true;
+    }
+    const found = bfsSearch(tile.row, tile.col, (r,c) => r === ENTRANCE.row && c === ENTRANCE.col);
+    if (found){
+      dot.job = 'idle at entrance';
+      dot.path = found.path; dot.pathIndex = 0; dot.state = STATE_ENUM.WALKING;
+      dot.onArrive = () => {
+        dot.state = STATE_ENUM.WAITING;
+        dot.waitUntil = performance.now() + 1500;
+      };
+      return true;
+    }
+    dot.state = STATE_ENUM.IDLE;
+    dot.job = 'idle';
+    return false;
+  }
+
+  function advanceMovement(dot){
+    if (dot.state !== STATE_ENUM.WALKING) return;
+    if (!dot.path || dot.pathIndex >= dot.path.length){
+      dot.path = null;
+      const cb = dot.onArrive; dot.onArrive = null;
+      cb && cb();
+      return;
+    }
+    const wp = dot.path[dot.pathIndex];
+    const c = cellCenter(wp.row, wp.col);
+    const off = dotSlotOffset(dot);
+    const tx = c.x + off.x, ty = c.y + off.y;
+    const dx = tx - dot.x, dy = ty - dot.y;
+    const dist = Math.hypot(dx,dy);
+    if (dist < 3){
+      dot.pathIndex++;
+      if (dot.pathIndex >= dot.path.length){
+        dot.path = null; dot.pathIndex = 0;
+        const cb = dot.onArrive; dot.onArrive = null;
+        cb && cb();
+      }
+      return;
+    }
+    dot._moveDx = dx/dist; dot._moveDy = dy/dist; dot._moveDist = dist;
+  }
+
+  function interruptDot(dot){
+    dot.path = null; dot.pathIndex = 0; dot.onArrive = null;
+    dot.workTimer = null; dot.onWorkDone = null; dot.waitCondition = null; dot.waitUntil = null;
+    dot.state = STATE_ENUM.IDLE; dot.job = 'responding';
+    dot.followTarget = null;
+  }
+
+  function tickInjured(dot, dt){
+    if (dot.beingHealed) return;
+    dot.hp -= dt * 3;
+    if (dot.hp <= 0){
+      state.staff = state.staff.filter(s => s !== dot);
+      showToast(staffById(dot.type).name + ' died from untreated injuries.', 'error');
+    }
+  }
+
+  function tickFollow(dot, dt){
+    const leader = dot.followTarget;
+    if (!leader || !state.staff.includes(leader)){
+      dot.followTarget = null; dot.state = STATE_ENUM.IDLE; return;
+    }
+    const off = dotSlotOffset(dot);
+    const tx = leader.x + off.x*1.4, ty = leader.y + off.y*1.4;
+    const dx = tx - dot.x, dy = ty - dot.y, dist = Math.hypot(dx,dy);
+    const step = dot.speed * 1.1 * dt;
+    if (dist > 1){ dot.x += (dx/dist)*Math.min(step,dist); dot.y += (dy/dist)*Math.min(step,dist); }
+  }
+
+  function injureStaff(dot, reason){
+    if (dot.injured) return;
+    interruptDot(dot);
+    dot.injured = true;
+    dot.hp = 45;
+    dot.treatedBy = null;
+    dot.beingHealed = false;
+    showToast(staffById(dot.type).name + ' injured during ' + reason + '.', 'error');
+  }
+
+  function beginHealing(doctorDot, patient){
+    patient.followTarget = null;
+    patient.state = STATE_ENUM.WAITING;
+    patient.beingHealed = true;
+    doctorDot.state = STATE_ENUM.WORKING;
+    doctorDot.job = 'treating patient';
+    doctorDot.workTimer = 3 + Math.random()*2;
+    const healSeconds = doctorDot.workTimer;
+    patient.waitUntil = performance.now() + healSeconds*1000 + 500;
+    doctorDot.onWorkDone = () => {
+      patient.injured = false;
+      patient.hp = 100;
+      patient.treatedBy = null;
+      patient.beingHealed = false;
+      patient.state = STATE_ENUM.IDLE;
+      showToast(staffById(patient.type).name + ' recovered.', 'success');
+      doctorDot.job = 'idle';
+      doctorDot.state = STATE_ENUM.IDLE;
+    };
+  }
+
+  function tickDot(dot, dt){
+    if (dot.injured){
+      if (dot.followTarget) tickFollow(dot, dt);
+      else tickInjured(dot, dt);
+      return;
+    }
+
+    if (dot.state === STATE_ENUM.WALKING){
+      dot._moveDx = 0; dot._moveDy = 0; dot._moveDist = 0;
+      advanceMovement(dot);
+      if (dot._moveDist > 0){
+        const step = dot.speed * dt;
+        const m = Math.min(step, dot._moveDist);
+        dot.x += dot._moveDx * m;
+        dot.y += dot._moveDy * m;
+      }
+    } else if (dot.state === STATE_ENUM.WORKING){
+      if (dot.workTimer !== null && dot.workTimer !== undefined){
+        dot.workTimer -= dt;
+        if (dot.workTimer <= 0){
+          dot.workTimer = null;
+          const cb = dot.onWorkDone; dot.onWorkDone = null;
+          cb && cb();
+        }
+      } else if (dot.waitCondition){
+        if (!dot.waitCondition()){
+          const cb = dot.onWorkDone; dot.onWorkDone = null; dot.waitCondition = null;
+          cb && cb();
+        }
+      }
+    } else if (dot.state === STATE_ENUM.WAITING){
+      if (dot.waitUntil !== null && dot.waitUntil !== undefined && performance.now() >= dot.waitUntil){
+        dot.state = STATE_ENUM.IDLE; dot.waitUntil = null;
+      }
+    } else if (dot.state === STATE_ENUM.IDLE){
+      const module = JOB_MODULES[dot.type];
+      module && module.decide && module.decide(dot);
+    }
+  }
+
+  /* =====================================================================
+     JOB MODULES
+     To add a new staff type: add it to STAFF[], give it a color, and add
+     a JOB_MODULES[id] = { decide(dot){...} } entry. Nothing else in the
+     main loop needs to change — tickDot() dispatches generically.
+  ===================================================================== */
+
+  const JOB_MODULES = {
+
+    scientist: {
+      decide(dot){
+        const tile = dotTile(dot);
+        const candidate = state.scps.find(s => !s.breached && !s.sciBy);
+        if (candidate){
+          const found = bfsPathTo(tile.row, tile.col, candidate.row, candidate.col);
+          if (found){
+            candidate.sciBy = dot;
+            dot.job = 'heading to ' + scpById(candidate.scpId).num;
+            dot.path = found.path; dot.pathIndex = 0; dot.state = STATE_ENUM.WALKING;
+            dot.onArrive = () => {
+              const duration = 5 + Math.random()*3;
+              candidate.testEndsAt = performance.now() + duration*1000;
+              dot.state = STATE_ENUM.WORKING;
+              dot.job = 'researching ' + scpById(candidate.scpId).num;
+              dot.workTimer = duration;
+              dot.onWorkDone = () => {
+                if (candidate.sciBy === dot) candidate.sciBy = null;
+                goToRoomOfType(dot, ['lab','office'], 'returning to lab');
+              };
+            };
+            return;
+          }
+        }
+        goToRoomOfType(dot, ['lab','office'], 'awaiting assignment');
+      }
+    },
+
+    classd: {
+      decide(dot){
+        const tile = dotTile(dot);
+        const now = performance.now();
+        const target = state.scps.find(s => !s.breached && s.sciBy && !s.cdBy && now < (s.testEndsAt||0) - 800);
+        if (target){
+          const found = bfsPathTo(tile.row, tile.col, target.row, target.col);
+          if (found){
+            target.cdBy = dot;
+            dot.job = 'reporting for testing';
+            dot.path = found.path; dot.pathIndex = 0; dot.state = STATE_ENUM.WALKING;
+            dot.onArrive = () => {
+              dot.state = STATE_ENUM.WORKING;
+              dot.job = 'undergoing test';
+              dot.workTimer = Math.max(1, (target.testEndsAt - performance.now())/1000);
+              dot.onWorkDone = () => {
+                const scp = scpById(target.scpId);
+                const risk = { safe:0, euclid:0.06, keter:0.18 }[scp.cls] || 0;
+                const finalRisk = target.escortedBy ? risk*0.5 : risk;
+                if (target.cdBy === dot) target.cdBy = null;
+                if (Math.random() < finalRisk){
+                  injureStaff(dot, 'a containment test');
+                  return;
+                }
+                goToRoomOfType(dot, ['holding'], 'returning to holding');
+              };
+            };
+            return;
+          }
+        }
+        goToRoomOfType(dot, ['holding'], 'waiting in holding');
+      }
+    },
+
+    security: {
+      decide(dot){
+        const tile = dotTile(dot);
+
+        if (state.breaches.length){
+          const b = state.breaches.find(b => !b.guardResponder) || state.breaches[0];
+          const found = bfsPathTo(tile.row, tile.col, b.row, b.col);
+          if (found){
+            b.guardResponder = dot;
+            dot.job = 'responding to breach';
+            dot.path = found.path; dot.pathIndex = 0; dot.state = STATE_ENUM.WALKING;
+            dot.onArrive = () => {
+              dot.state = STATE_ENUM.WORKING;
+              dot.job = 'containing breach';
+              dot.waitCondition = () => state.breaches.includes(b);
+              dot.onWorkDone = () => {
+                if (b.guardResponder === dot) b.guardResponder = null;
+                dot.state = STATE_ENUM.IDLE;
+              };
+            };
+            return;
+          }
+        }
+
+        const test = state.scps.find(s => !s.breached && s.sciBy && s.cdBy && !s.escortedBy && scpById(s.scpId).cls !== 'safe');
+        if (test){
+          const found = bfsPathTo(tile.row, tile.col, test.row, test.col);
+          if (found){
+            test.escortedBy = dot;
+            dot.job = 'escorting test';
+            dot.path = found.path; dot.pathIndex = 0; dot.state = STATE_ENUM.WALKING;
+            dot.onArrive = () => {
+              dot.state = STATE_ENUM.WORKING;
+              dot.job = 'on escort duty';
+              dot.waitCondition = () => state.scps.includes(test) && !!test.sciBy && !!test.cdBy;
+              dot.onWorkDone = () => {
+                if (test.escortedBy === dot) test.escortedBy = null;
+                dot.state = STATE_ENUM.IDLE;
+              };
+            };
+            return;
+          }
+        }
+
+        const posts = [];
+        for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++) if (roomTypeAt(r,c) === 'security') posts.push({row:r,col:c});
+        if (posts.length){
+          const pick = posts[Math.floor(Math.random()*posts.length)];
+          const found = bfsPathTo(tile.row, tile.col, pick.row, pick.col);
+          if (found){
+            dot.job = 'patrolling';
+            dot.path = found.path; dot.pathIndex = 0; dot.state = STATE_ENUM.WALKING;
+            dot.onArrive = () => {
+              dot.state = STATE_ENUM.WAITING;
+              dot.job = 'on patrol watch';
+              dot.waitUntil = performance.now() + 2000 + Math.random()*3000;
+            };
+            return;
+          }
+        }
+        goToRoomOfType(dot, ['security','control'], 'patrolling');
+      }
+    },
+
+    engineer: {
+      decide(dot){
+        const tile = dotTile(dot);
+        let target = null, bestHealth = 85;
+        for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++){
+          const cell = state.grid[r][c];
+          if (!cell) continue;
+          if ((cell.health ?? 100) < bestHealth){ bestHealth = cell.health; target = {row:r,col:c}; }
+        }
+        if (target){
+          const found = bfsPathTo(tile.row, tile.col, target.row, target.col);
+          if (found){
+            const roomName = roomById(roomTypeAt(target.row,target.col)).name;
+            dot.job = 'heading to repair ' + roomName;
+            dot.path = found.path; dot.pathIndex = 0; dot.state = STATE_ENUM.WALKING;
+            dot.onArrive = () => {
+              dot.state = STATE_ENUM.WORKING;
+              dot.job = 'repairing ' + roomName;
+              dot.workTimer = 3 + Math.random()*2;
+              dot.onWorkDone = () => {
+                const cell = state.grid[target.row][target.col];
+                if (cell){ cell.health = 100; showToast(roomName + ' repaired.', 'success'); }
+                goToRoomOfType(dot, ['engineering'], 'returning to maintenance');
+              };
+            };
+            return;
+          }
+        }
+        goToRoomOfType(dot, ['engineering'], 'on standby');
+      }
+    },
+
+    doctor: {
+      decide(dot){
+        const tile = dotTile(dot);
+        const candidates = state.staff.filter(s => s.injured && !s.treatedBy && s !== dot);
+        if (candidates.length){
+          const targetSet = new Set(candidates.map(c => { const t = dotTile(c); return t.row+','+t.col; }));
+          const found = bfsSearch(tile.row, tile.col, (r,c) => targetSet.has(r+','+c));
+          if (found){
+            const patient = candidates.find(c => { const t = dotTile(c); return t.row===found.row && t.col===found.col; });
+            patient.treatedBy = dot;
+            dot.job = 'responding to injury';
+            dot.path = found.path; dot.pathIndex = 0; dot.state = STATE_ENUM.WALKING;
+            dot.onArrive = () => {
+              const myTile = dotTile(dot);
+              const medTile = nearestRoomTileFrom(myTile, 'medical');
+              if (medTile && !(medTile.row === myTile.row && medTile.col === myTile.col)){
+                dot.job = 'escorting patient to Medical';
+                patient.followTarget = dot;
+                const found2 = bfsPathTo(myTile.row, myTile.col, medTile.row, medTile.col);
+                if (found2){
+                  dot.path = found2.path; dot.pathIndex = 0; dot.state = STATE_ENUM.WALKING;
+                  dot.onArrive = () => beginHealing(dot, patient);
+                  return;
+                }
+              }
+              beginHealing(dot, patient);
+            };
+            return;
+          }
+        }
+        goToRoomOfType(dot, ['medical'], 'on standby');
+      }
+    },
+
+    mtf: {
+      decide(dot){
+        const tile = dotTile(dot);
+        if (state.breaches.length){
+          const b = state.breaches.find(b => !b.mtfResponder);
+          if (b){
+            const found = bfsPathTo(tile.row, tile.col, b.row, b.col);
+            if (found){
+              b.mtfResponder = dot;
+              dot.job = 'deploying to breach';
+              dot.path = found.path; dot.pathIndex = 0; dot.state = STATE_ENUM.WALKING;
+              dot.onArrive = () => {
+                if (!state.breaches.includes(b)){ dot.state = STATE_ENUM.IDLE; return; }
+                dot.state = STATE_ENUM.WORKING;
+                dot.job = 'recontaining ' + scpById(b.scpId).num;
+                dot.workTimer = 4 + Math.random()*2;
+                dot.onWorkDone = () => {
+                  if (state.breaches.includes(b)) resolveBreach(b, 'MTF Epsilon-11');
+                  goToRoomOfType(dot, ['barracks'], 'returning to barracks');
+                };
+              };
+              return;
+            }
+          }
+        }
+        goToRoomOfType(dot, ['barracks'], 'standing by');
+      }
+    },
+  };
+
+  function isActivelyTesting(inst){
+    return !!inst.sciBy && inst.sciBy.state === STATE_ENUM.WORKING &&
+           !!inst.cdBy && inst.cdBy.state === STATE_ENUM.WORKING;
+  }
+
+  /* =====================================================================
+     SIDEBAR RENDER
+  ===================================================================== */
+
+  function renderRoomListInto(container, filterFn){
+    container.innerHTML = '';
+    ROOMS.filter(filterFn).forEach(room => {
       const btn = document.createElement('button');
       btn.className = 'item-btn' + (state.selectedRoom === room.id ? ' selected' : '');
       const zoneLabel = room.zone === 'heavy' ? ' · Heavy CZ' : room.zone === 'medium' ? ' · Med CZ' : '';
+      const powerLabel = room.power < 0 ? ' · +' + (-room.power) + ' pwr' : room.power > 0 ? ' · -' + room.power + ' pwr' : '';
       btn.innerHTML = `
         <span class="swatch" style="background:${room.color}"></span>
         <span class="item-text">
           <span class="name">${room.name}</span>
-          <span class="meta">${fmtMoney(room.cost)}${zoneLabel}</span>
+          <span class="meta">${fmtMoney(room.cost)}${zoneLabel}${powerLabel}</span>
         </span>
         <span class="item-badge owned">${roomCount(room.id)}</span>`;
       btn.addEventListener('click', () => {
@@ -474,8 +1131,13 @@
         state.selectedRoom = (state.selectedRoom === room.id) ? null : room.id;
         renderRoomList(); renderDemolishBtn(); renderScpLists();
       });
-      roomListEl.appendChild(btn);
+      container.appendChild(btn);
     });
+  }
+
+  function renderRoomList(){
+    renderRoomListInto(roomListEl, r => r.category !== 'power');
+    renderRoomListInto(powerRoomListEl, r => r.category === 'power');
   }
 
   function renderDemolishBtn(){ demolishBtn.classList.toggle('active', state.demolishMode); }
@@ -509,6 +1171,16 @@
       <span class="chip">Keter <b>${containedCount('keter')}</b></span>`;
   }
 
+  function renderPowerChips(){
+    const p = state.power;
+    const status = p.demand === 0 ? 'Idle' : (p.supply >= p.demand ? 'Stable' : (p.supply + p.batteryCharge >= p.demand ? 'Buffered' : 'Critical'));
+    powerChips.innerHTML = `
+      <span class="chip">Supply <b>${Math.round(p.supply)}</b></span>
+      <span class="chip">Demand <b>${Math.round(p.demand)}</b></span>
+      <span class="chip${status==='Critical' ? ' warn' : ''}">Status <b>${status}</b></span>
+      <span class="chip">Battery <b>${Math.round(p.batteryCharge)}/${Math.round(p.batteryCapacity)}</b></span>`;
+  }
+
   function renderScpLists(){
     scpListsEl.innerHTML = '';
     CLASS_ORDER.forEach(cls => {
@@ -531,7 +1203,7 @@
         let meta = unlocked ? fmtMoney(scp.cost) + ' · +' + scp.income + '/s' : 'Research required';
         if (inst) meta = 'Contained · +' + scp.income + '/s';
         if (inInv && !inst) meta = 'In storage — click to assign';
-        if (breached) meta = 'BREACHED — deploy MTF';
+        if (breached) meta = 'BREACHED — MTF responding';
 
         btn.innerHTML = `
           <span class="swatch" style="background:${scp.color}"></span>
@@ -569,7 +1241,7 @@
     renderRoomList(); renderDemolishBtn();
 
     if (state.breaches.some(b => b.scpId === scpId)){
-      showToast(scp.num + ' is breached! Use MTF Recontainment.', 'error');
+      showToast(scp.num + ' is breached! MTF are responding.', 'error');
       renderScpLists();
       return;
     }
@@ -591,8 +1263,9 @@
     if (state.research){
       const scp = scpById(state.research.scpId);
       const pct = Math.min(100, (1 - state.research.remaining / RESEARCH_MS) * 100);
+      const poweredNote = hasPoweredRoomOfType('lab') ? '' : ' <span style="color:var(--danger)">(paused — Lab unpowered)</span>';
       researchPanel.innerHTML = `
-        <div class="hint-box">Researching <b>${scp.num}</b> in Lab…
+        <div class="hint-box">Researching <b>${scp.num}</b> in Lab…${poweredNote}
           <div class="progress-bar"><div class="fill" style="width:${pct}%"></div></div>
         </div>`;
     } else {
@@ -628,10 +1301,23 @@
       expeditionBtn.disabled = state.money < EXPEDITION_COST || staffCount('mtf') < 1;
     }
 
-    recontainBtn.disabled = state.breaches.length === 0 || state.money < RECONTAIN_COST || staffCount('mtf') < 1;
+    recontainBtn.disabled = state.breaches.length === 0 || state.money < RECONTAIN_COST;
   }
 
-  /* ---------- ACTIONS ---------- */
+  function renderAll(){
+    renderRoomList(); renderStaffList(); renderScpLists(); renderOpsPanels(); renderPowerChips(); updateTopbar();
+  }
+
+  function updateTopbar(){
+    statMoney.childNodes[0].nodeValue = fmtMoney(state.money);
+    statIncome.textContent = lastIncome > 0 ? ('+' + fmtMoney(lastIncome) + '/s') : '';
+    statDay.textContent = state.day;
+    renderStatChips();
+  }
+
+  /* =====================================================================
+     ACTIONS
+  ===================================================================== */
 
   function isPlaceable(row, col){
     if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return false;
@@ -644,18 +1330,14 @@
     if (!room || !isPlaceable(row, col)) { showToast('Cannot build here.', 'error'); return; }
     if (state.money < room.cost){ showToast('Insufficient funds.', 'error'); return; }
     state.money -= room.cost;
-    state.grid[row][col] = room.id;
+    state.grid[row][col] = { type: room.id, health: 100, powered: true };
     showToast(room.name + ' constructed.', 'success');
     renderAll();
   }
 
   function demolishTile(row, col){
     if (row === ENTRANCE.row && col === ENTRANCE.col) return;
-    const scp = scpAtCell(row, col);
-    if (scp){
-      showToast('Cannot demolish — SCP contained here.', 'error');
-      return;
-    }
+    if (scpAtCell(row, col)){ showToast('Cannot demolish — SCP contained here.', 'error'); return; }
     if (state.grid[row][col] === null) return;
     state.grid[row][col] = null;
     showToast('Room demolished.');
@@ -665,15 +1347,12 @@
   function tryAssignScp(row, col){
     if (!state.assignScp) return false;
     const scp = scpById(state.assignScp);
-    const roomId = state.grid[row][col];
+    const roomId = roomTypeAt(row, col);
     if (!roomId || !canRoomHold(roomId, scp.cls)){
       showToast('Incompatible containment — need ' + (scp.cls === 'keter' ? 'Heavy Cell' : 'Containment Cell') + '.', 'error');
       return true;
     }
-    if (scpAtCell(row, col)){
-      showToast('Cell already occupied.', 'error');
-      return true;
-    }
+    if (scpAtCell(row, col)){ showToast('Cell already occupied.', 'error'); return true; }
     const fromInv = state.inventory.includes(scp.id);
     if (!fromInv && state.money < scp.cost){
       showToast('Need ' + fmtMoney(scp.cost) + ' to acquire.', 'error');
@@ -682,7 +1361,7 @@
     if (!fromInv) state.money -= scp.cost;
     else state.inventory = state.inventory.filter(id => id !== scp.id);
 
-    state.scps.push({ scpId: scp.id, row, col, breached: false, testCooldown: 0 });
+    state.scps.push({ scpId: scp.id, row, col, breached: false, sciBy:null, cdBy:null, escortedBy:null, testEndsAt:0 });
     state.assignScp = null;
     showToast(scp.num + ' contained successfully!', 'success');
     renderAll();
@@ -698,70 +1377,10 @@
     if (!type || state.money < type.cost){ showToast('Insufficient funds.', 'error'); renderStaffList(); return; }
     state.money -= type.cost;
     const ep = entrancePixel();
-    const dot = {
-      type: type.id, color: type.color,
-      x: ep.x + (Math.random()*10 - 5), y: ep.y + (Math.random()*10 - 5),
-      targetX: ep.x, targetY: ep.y,
-      speed: 28 + Math.random()*20, pauseUntil: 0,
-      task: null, injured: false,
-    };
-    assignStaffTask(dot);
+    const dot = makeDot(typeId, ep.x + (Math.random()*10-5), ep.y + (Math.random()*10-5));
     state.staff.push(dot);
     showToast(type.name + ' hired.', 'success');
     renderAll();
-  }
-
-  function cellCenter(row, col){
-    return { x: col * state.cellSize + state.cellSize/2, y: row * state.cellSize + state.cellSize/2 };
-  }
-
-  function assignStaffTask(dot){
-    const type = staffById(dot.type);
-    if (dot.injured && staffCount('doctor') > 0){
-      const docs = state.staff.filter(s => s.type === 'doctor');
-      if (docs.length) { const d = docs[0]; dot.task = { kind:'heal', target:d }; return; }
-    }
-
-    if (type.role === 'research' || type.role === 'labor'){
-      const cells = state.scps.filter(s => !s.breached);
-      if (cells.length){
-        const pick = cells[Math.floor(Math.random() * cells.length)];
-        dot.task = { kind:'test', row:pick.row, col:pick.col };
-        const c = cellCenter(pick.row, pick.col);
-        dot.targetX = c.x + (Math.random()*8-4);
-        dot.targetY = c.y + (Math.random()*8-4);
-        return;
-      }
-    }
-
-    if (type.role === 'security' && state.breaches.length){
-      const b = state.breaches[0];
-      dot.task = { kind:'breach', scpId: b.scpId };
-      dot.targetX = canvas.width * 0.5 + Math.random()*40-20;
-      dot.targetY = canvas.height * 0.5 + Math.random()*40-20;
-      return;
-    }
-
-    if (type.role === 'research' && roomCount('lab') > 0){
-      for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++){
-        if (state.grid[r][c] === 'lab'){
-          const cen = cellCenter(r,c);
-          dot.task = { kind:'lab', row:r, col:c };
-          dot.targetX = cen.x; dot.targetY = cen.y;
-          return;
-        }
-      }
-    }
-
-    pickWanderTarget(dot);
-  }
-
-  function pickWanderTarget(dot){
-    dot.task = { kind:'wander' };
-    const col = Math.floor(Math.random()*COLS);
-    const row = Math.floor(Math.random()*ROWS);
-    dot.targetX = col * state.cellSize + state.cellSize/2 + (Math.random()*10-5);
-    dot.targetY = row * state.cellSize + state.cellSize/2 + (Math.random()*10-5);
   }
 
   function startResearch(scpId){
@@ -793,39 +1412,51 @@
     renderScpLists(); renderOpsPanels();
   }
 
-  function deployRecontain(){
-    if (!state.breaches.length || state.money < RECONTAIN_COST || staffCount('mtf') < 1) return;
-    state.money -= RECONTAIN_COST;
-    const b = state.breaches.shift();
-    const scp = scpById(b.scpId);
-    state.scps.push({ scpId: b.scpId, row: b.row, col: b.col, breached: false, testCooldown: 0 });
-    showToast(scp.num + ' recontained by MTF Epsilon-11.', 'success');
-    if (!state.breaches.length){
-      state.alarmUntil = 0;
-      viewport.classList.remove('alarm');
-      statusPill.classList.remove('breach');
-      statusText.textContent = 'Operational';
-    }
+  function resolveBreach(breach, credit){
+    state.breaches = state.breaches.filter(b => b !== breach);
+    const scp = scpById(breach.scpId);
+    state.scps.push({ scpId: breach.scpId, row: breach.row, col: breach.col, breached:false, sciBy:null, cdBy:null, escortedBy:null, testEndsAt:0 });
+    showToast(scp.num + ' recontained by ' + credit + '.', 'success');
+    refreshAlertVisuals();
     renderAll();
+  }
+
+  function deployRecontain(){
+    if (!state.breaches.length || state.money < RECONTAIN_COST) return;
+    state.money -= RECONTAIN_COST;
+    const b = state.breaches[0];
+    if (b.mtfResponder){ interruptDot(b.mtfResponder); }
+    if (b.guardResponder){ interruptDot(b.guardResponder); }
+    resolveBreach(b, 'Emergency Contractor Team');
   }
 
   function triggerBreach(scpInst){
     const scp = scpById(scpInst.scpId);
     scpInst.breached = true;
-    state.breaches.push({ scpId: scpInst.scpId, row: scpInst.row, col: scpInst.col });
+    if (scpInst.sciBy) interruptDot(scpInst.sciBy);
+    if (scpInst.cdBy) interruptDot(scpInst.cdBy);
+    if (scpInst.escortedBy) interruptDot(scpInst.escortedBy);
+    state.breaches.push({ scpId: scpInst.scpId, row: scpInst.row, col: scpInst.col, guardResponder:null, mtfResponder:null });
     state.scps = state.scps.filter(s => s !== scpInst);
-    triggerAlarm(8000);
     showToast('CONTAINMENT BREACH: ' + scp.num + '!', 'error');
+    refreshAlertVisuals();
 
     if (scp.cls !== 'safe' && Math.random() < 0.35){
-      const victims = state.staff.filter(s => s.type === 'classd');
+      const victims = state.staff.filter(s => s.type === 'classd' && !s.injured);
       if (victims.length){
         const v = victims[Math.floor(Math.random() * victims.length)];
-        state.staff = state.staff.filter(s => s !== v);
-        showToast('Class-D casualty during ' + scp.num + ' breach.', 'error');
+        injureStaff(v, 'a containment breach');
       }
     }
     renderAll();
+  }
+
+  function refreshAlertVisuals(){
+    viewport.classList.toggle('alarm', state.breaches.length > 0);
+    viewport.classList.toggle('emergency', state.breaches.length === 0 && state.power.deficit > 0);
+    if (state.breaches.length){ statusPill.className = 'status-pill breach'; statusText.textContent = 'Breach Alert'; }
+    else if (state.power.deficit > 0){ statusPill.className = 'status-pill warn'; statusText.textContent = 'Low Power'; }
+    else { statusPill.className = 'status-pill'; statusText.textContent = 'Operational'; }
   }
 
   function resetGame(){
@@ -843,10 +1474,14 @@
     state.research = null;
     state.expedition = null;
     state.breaches = [];
-    state.alarmUntil = 0;
     state.testParticles = [];
-    viewport.classList.remove('alarm');
-    statusPill.classList.remove('breach');
+    state.batteryCharge = 0;
+    state.powerOverlay = false;
+    overlayBtn.textContent = '👁 Power Overlay: OFF';
+    overlayBtn.classList.remove('active');
+    computePower();
+    viewport.classList.remove('alarm','emergency');
+    statusPill.className = 'status-pill';
     statusText.textContent = 'Operational';
     renderAll();
     showToast('Facility reset.');
@@ -856,9 +1491,12 @@
     try {
       const data = {
         money: state.money, day: state.day, grid: state.grid,
-        staff: state.staff.map(s => ({ type:s.type, x:s.x, y:s.y, injured:s.injured })),
-        scps: state.scps, unlocked: state.unlocked, inventory: state.inventory,
-        research: state.research, expedition: state.expedition, breaches: state.breaches,
+        staff: state.staff.map(s => ({ type:s.type, x:s.x, y:s.y })),
+        scps: state.scps.map(s => ({ scpId:s.scpId, row:s.row, col:s.col, breached:s.breached })),
+        unlocked: state.unlocked, inventory: state.inventory,
+        research: state.research, expedition: state.expedition,
+        breaches: state.breaches.map(b => ({ scpId:b.scpId, row:b.row, col:b.col })),
+        batteryCharge: state.batteryCharge,
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
       showToast('Progress saved.', 'success');
@@ -873,83 +1511,77 @@
       state.money = data.money ?? START_MONEY;
       state.day = data.day ?? 1;
       state.grid = data.grid ?? state.grid;
-      state.staff = (data.staff ?? []).map(s => ({
-        ...s, color: staffById(s.type).color, targetX:s.x, targetY:s.y,
-        speed:30, pauseUntil:0, task:{kind:'wander'},
-      }));
-      state.scps = data.scps ?? [];
+      state.staff = (data.staff ?? []).map(s => makeDot(s.type, s.x, s.y));
+      state.scps = (data.scps ?? []).map(s => ({ ...s, sciBy:null, cdBy:null, escortedBy:null, testEndsAt:0 }));
       state.unlocked = data.unlocked ?? ['scp999','scp131'];
       state.inventory = data.inventory ?? [];
       state.research = data.research ?? null;
       state.expedition = data.expedition ?? null;
-      state.breaches = data.breaches ?? [];
+      state.breaches = (data.breaches ?? []).map(b => ({ ...b, guardResponder:null, mtfResponder:null }));
+      state.batteryCharge = data.batteryCharge ?? 0;
       return true;
     } catch(e){ return false; }
   }
 
-  function renderAll(){
-    renderRoomList(); renderStaffList(); renderScpLists(); renderOpsPanels(); updateTopbar();
-  }
-
-  function updateTopbar(){
-    statMoney.childNodes[0].nodeValue = fmtMoney(state.money);
-    statIncome.textContent = lastIncome > 0 ? ('+' + fmtMoney(lastIncome) + '/s') : '';
-    statDay.textContent = state.day;
-    renderStatChips();
-  }
-
-  /* ---------- ECONOMY & EVENTS ---------- */
+  /* =====================================================================
+     ECONOMY TICK
+  ===================================================================== */
 
   function economyTick(){
-    let income = 0;
-    const sci = staffCount('scientist');
-    const cd = staffCount('classd');
+    degradeRooms();
+    computePower();
+
     const eng = staffCount('engineer');
-    const ctrl = roomCount('control');
-    const bonus = 1 + eng * 0.05 + ctrl * 0.1;
+    const ctrlPowered = countPowered('control');
+    const demand = state.power.demand, supply = state.power.supply, deficit = state.power.deficit;
+    const powerEfficiency = demand > 0 ? Math.min(1, supply/demand) : 1;
+    const bonus = (1 + eng*0.05 + ctrlPowered*0.1) * (deficit > 0 ? Math.max(0.5, powerEfficiency) : 1);
 
+    let income = 0;
     state.scps.filter(s => !s.breached).forEach(inst => {
-      const scp = scpById(inst.scpId);
-      const staffNear = state.staff.some(st => {
-        const col = Math.floor(st.x / state.cellSize);
-        const row = Math.floor(st.y / state.cellSize);
-        return (st.type === 'scientist' || st.type === 'classd') &&
-          Math.abs(row - inst.row) <= 1 && Math.abs(col - inst.col) <= 1;
-      });
-      if (staffNear && sci > 0 && cd > 0) income += scp.income * bonus;
+      if (isActivelyTesting(inst) && cellPowered(inst.row, inst.col)){
+        const scp = scpById(inst.scpId);
+        income += scp.income * bonus;
+        state.testParticles.push({
+          x: inst.col*state.cellSize + state.cellSize/2, y: inst.row*state.cellSize + state.cellSize/2,
+          life: 1, color: scp.color,
+        });
+      }
     });
-
     lastIncome = income;
     state.money += income;
 
+    const sec = securityLevel();
     state.scps.filter(s => !s.breached).forEach(inst => {
       const scp = scpById(inst.scpId);
-      const sec = securityLevel();
-      const breachMod = Math.max(0.3, 1 - sec * 0.04);
-      if (Math.random() < scp.breach * breachMod * 0.15) triggerBreach(inst);
+      const breachMod = Math.max(0.3, 1 - sec*0.04);
+      const cell = state.grid[inst.row][inst.col];
+      const healthFactor = cell ? (1 + (100-(cell.health??100))/100) : 1;
+      const powerFactor = cellPowered(inst.row, inst.col) ? 1 : 4;
+      if (Math.random() < scp.breach * breachMod * healthFactor * powerFactor * 0.15) triggerBreach(inst);
     });
 
     if (state.research){
-      state.research.remaining -= TICK_MS;
-      if (state.research.remaining <= 0){
-        const id = state.research.scpId;
-        if (!state.unlocked.includes(id)) state.unlocked.push(id);
-        showToast(scpById(id).num + ' research complete — now acquirable!', 'success');
-        state.research = null;
+      if (hasPoweredRoomOfType('lab')){
+        state.research.remaining -= TICK_MS;
+        if (state.research.remaining <= 0){
+          const id = state.research.scpId;
+          if (!state.unlocked.includes(id)) state.unlocked.push(id);
+          showToast(scpById(id).num + ' research complete — now acquirable!', 'success');
+          state.research = null;
+        }
       }
     }
 
     if (state.expedition){
       state.expedition.remaining -= TICK_MS;
-      if (state.expedition.remaining <= 0){
-        state.expedition = null;
-        completeExpedition();
-      }
+      if (state.expedition.remaining <= 0){ state.expedition = null; completeExpedition(); }
     }
 
+    refreshAlertVisuals();
     updateTopbar();
     renderOpsPanels();
-    clearAlarmIfNeeded();
+    renderPowerChips();
   }
 
   function dayTick(){
@@ -965,58 +1597,29 @@
     if (cd > sec && cd >= 3 && Math.random() < 0.35){
       showToast('Class-D riot! Security overwhelmed.', 'error');
       state.money = Math.max(0, state.money - 200);
-      const victims = state.staff.filter(s => s.type === 'classd').slice(0, Math.min(2, cd - sec));
-      state.staff = state.staff.filter(s => !victims.includes(s));
+      const victims = state.staff.filter(s => s.type === 'classd' && !s.injured).slice(0, Math.min(2, cd - sec));
+      victims.forEach(v => injureStaff(v, 'a Class-D riot'));
     }
 
     updateTopbar();
   }
 
-  function runTests(dt){
-    state.scps.filter(s => !s.breached).forEach(inst => {
-      inst.testCooldown = (inst.testCooldown || 0) - dt;
-      if (inst.testCooldown > 0) return;
-
-      const scp = scpById(inst.scpId);
-      const sciHere = state.staff.some(st => st.type === 'scientist' &&
-        Math.floor(st.x/state.cellSize) === inst.col && Math.floor(st.y/state.cellSize) === inst.row);
-      const cdHere = state.staff.some(st => st.type === 'classd' &&
-        Math.abs(Math.floor(st.x/state.cellSize) - inst.col) <= 1 &&
-        Math.abs(Math.floor(st.y/state.cellSize) - inst.row) <= 1);
-
-      if (sciHere && cdHere){
-        inst.testCooldown = 3 + Math.random() * 4;
-        state.testParticles.push({
-          x: inst.col * state.cellSize + state.cellSize/2,
-          y: inst.row * state.cellSize + state.cellSize/2,
-          life: 1, color: scp.color,
-        });
-        if (scp.cls === 'keter' && Math.random() < 0.08){
-          const cds = state.staff.filter(st => st.type === 'classd' &&
-            Math.abs(Math.floor(st.x/state.cellSize) - inst.col) <= 1);
-          if (cds.length){
-            state.staff = state.staff.filter(s => s !== cds[0]);
-            showToast('Class-D lost during ' + scp.num + ' test.', 'error');
-          }
-        }
-      }
-    });
-
-    state.testParticles = state.testParticles.filter(p => {
-      p.life -= dt * 0.8;
-      p.y -= dt * 12;
-      return p.life > 0;
-    });
-  }
-
-  /* ---------- CANVAS ---------- */
+  /* =====================================================================
+     CANVAS
+  ===================================================================== */
 
   function resizeCanvas(){
     const rect = viewport.getBoundingClientRect();
     const pad = 24;
-    state.cellSize = Math.max(20, Math.floor(Math.min((rect.width-pad)/COLS, (rect.height-pad)/ROWS)));
-    canvas.width = state.cellSize * COLS;
-    canvas.height = state.cellSize * ROWS;
+    const oldSize = state.cellSize;
+    const newSize = Math.max(20, Math.floor(Math.min((rect.width-pad)/COLS, (rect.height-pad)/ROWS)));
+    if (oldSize && newSize !== oldSize){
+      const scale = newSize/oldSize;
+      state.staff.forEach(d => { d.x *= scale; d.y *= scale; });
+    }
+    state.cellSize = newSize;
+    canvas.width = newSize * COLS;
+    canvas.height = newSize * ROWS;
   }
 
   function canvasToCell(clientX, clientY){
@@ -1038,9 +1641,9 @@
   }
 
   function zoneTint(row, col){
-    const roomId = state.grid[row][col];
-    if (!roomId) return null;
-    const room = roomById(roomId);
+    const cell = state.grid[row][col];
+    if (!cell) return null;
+    const room = roomById(cell.type);
     if (!room) return null;
     if (room.zone === 'heavy') return 'rgba(92,32,32,0.12)';
     if (room.zone === 'medium') return 'rgba(47,111,109,0.08)';
@@ -1060,7 +1663,15 @@
     for (let r=0;r<=ROWS;r++){ ctx.beginPath(); ctx.moveTo(0,r*state.cellSize+.5); ctx.lineTo(canvas.width,r*state.cellSize+.5); ctx.stroke(); }
   }
 
-  function drawRoomTile(row, col, color, abbr){
+  function tileRenderColor(cell, room){
+    if (!state.powerOverlay) return room.color;
+    if (room.power < 0) return room.backup ? '#8a5a0c' : '#e0a72e';
+    if (room.id === 'battery') return '#4aa5a5';
+    if (room.id === 'corridor') return room.color;
+    return cell.powered !== false ? '#2f8f5c' : '#a23b3b';
+  }
+
+  function drawRoomTile(row, col, color, abbr, cell){
     const s = state.cellSize, x = col*s, y = row*s, pad = Math.max(2, s*0.07);
     ctx.fillStyle = color;
     roundRect(x+pad, y+pad, s-pad*2, s-pad*2, 4);
@@ -1069,6 +1680,26 @@
     ctx.lineWidth = 1;
     roundRect(x+pad, y+pad, s-pad*2, s-pad*2, 4);
     ctx.stroke();
+
+    if (cell && cell.powered === false && !state.powerOverlay){
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.42)';
+      roundRect(x+pad, y+pad, s-pad*2, s-pad*2, 4);
+      ctx.fill();
+      ctx.restore();
+    }
+    if (cell && (cell.health ?? 100) < 70){
+      ctx.save();
+      ctx.globalAlpha = 0.4;
+      ctx.strokeStyle = '#e0605a';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4,3]);
+      roundRect(x+pad, y+pad, s-pad*2, s-pad*2, 4);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
     if (s > 26){
       ctx.fillStyle = 'rgba(255,255,255,0.82)';
       ctx.font = `600 ${Math.max(9, s*0.24)}px 'JetBrains Mono', monospace`;
@@ -1096,7 +1727,7 @@
     }
   }
 
-  function drawEntrance(){ drawRoomTile(ENTRANCE.row, ENTRANCE.col, '#2f6b52', 'IN'); }
+  function drawEntrance(){ drawRoomTile(ENTRANCE.row, ENTRANCE.col, '#2f6b52', 'IN', null); }
 
   function drawHoverHighlight(){
     if (!state.hover) return;
@@ -1108,7 +1739,7 @@
       color = occupied ? 'rgba(224,96,90,0.9)' : 'rgba(224,96,90,0.25)';
     } else if (state.assignScp){
       const scp = scpById(state.assignScp);
-      const roomId = state.grid[row][col];
+      const roomId = roomTypeAt(row,col);
       const ok = roomId && canRoomHold(roomId, scp.cls) && !scpAtCell(row,col);
       color = ok ? 'rgba(69,201,189,0.9)' : 'rgba(224,96,90,0.6)';
     } else if (state.selectedRoom){
@@ -1126,22 +1757,29 @@
     [...state.staff].sort((a,b)=>a.y-b.y).forEach(dot => {
       const r = Math.max(4, state.cellSize*0.17);
       ctx.save();
-      ctx.shadowColor = dot.color;
+      ctx.shadowColor = dot.injured ? '#e0605a' : dot.color;
       ctx.shadowBlur = 7;
       ctx.beginPath();
       ctx.arc(dot.x, dot.y, r, 0, Math.PI*2);
       ctx.fillStyle = dot.color;
       ctx.fill();
       ctx.restore();
-      ctx.lineWidth = 1.2;
-      ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+      ctx.lineWidth = dot.injured ? 2 : 1.2;
+      ctx.strokeStyle = dot.injured ? 'rgba(224,96,90,0.9)' : 'rgba(0,0,0,0.55)';
       ctx.stroke();
+      if (dot.state === STATE_ENUM.WORKING){
+        ctx.beginPath();
+        ctx.arc(dot.x, dot.y, r+3, 0, Math.PI*2);
+        ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
     });
   }
 
   function drawParticles(){
     state.testParticles.forEach(p => {
-      ctx.globalAlpha = p.life;
+      ctx.globalAlpha = Math.max(0,p.life);
       ctx.fillStyle = p.color;
       ctx.font = `600 ${Math.max(8, state.cellSize*0.18)}px 'JetBrains Mono', monospace`;
       ctx.textAlign = 'center';
@@ -1163,12 +1801,14 @@
   function render(){
     drawGrid();
     for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++){
-      const val = state.grid[r][c];
-      if (val){ const room = roomById(val); drawRoomTile(r,c,room.color,room.abbr); }
+      const cell = state.grid[r][c];
+      if (cell){
+        const room = roomById(cell.type);
+        drawRoomTile(r,c, tileRenderColor(cell, room), room.abbr, cell);
+      }
     }
     state.scps.filter(s => !s.breached).forEach(inst => {
-      const scp = scpById(inst.scpId);
-      drawScpInCell(inst.row, inst.col, scp);
+      drawScpInCell(inst.row, inst.col, scpById(inst.scpId));
     });
     drawEntrance();
     drawHoverHighlight();
@@ -1178,27 +1818,8 @@
   }
 
   function update(dt){
-    state.staff.forEach(dot => {
-      const now = performance.now();
-      if (now < dot.pauseUntil) return;
-      const dx = dot.targetX - dot.x, dy = dot.targetY - dot.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist < 3){
-        dot.pauseUntil = now + 300 + Math.random()*900;
-        if (dot.task && dot.task.kind === 'test'){
-          const c = cellCenter(dot.task.row, dot.task.col);
-          dot.targetX = c.x + (Math.random()*10-5);
-          dot.targetY = c.y + (Math.random()*10-5);
-        } else {
-          assignStaffTask(dot);
-        }
-        return;
-      }
-      const step = dot.speed * dt;
-      dot.x += (dx/dist) * Math.min(step, dist);
-      dot.y += (dy/dist) * Math.min(step, dist);
-    });
-    runTests(dt);
+    state.staff.forEach(dot => tickDot(dot, dt));
+    state.testParticles = state.testParticles.filter(p => { p.life -= dt*0.8; p.y -= dt*12; return p.life > 0; });
   }
 
   function loop(now){
@@ -1209,7 +1830,25 @@
     requestAnimationFrame(loop);
   }
 
-  /* ---------- EVENTS ---------- */
+  /* =====================================================================
+     TOOLTIP
+  ===================================================================== */
+
+  function positionTooltip(clientX, clientY){
+    if (!state.hoverDot){ tooltipEl.style.display = 'none'; return; }
+    const d = state.hoverDot;
+    const type = staffById(d.type);
+    tooltipEl.style.display = 'block';
+    const statusLabel = d.injured ? 'Injured — awaiting treatment' : (d.job || d.state);
+    tooltipEl.innerHTML = `<b>${type.name}</b><br>${statusLabel}`;
+    const vpRect = viewport.getBoundingClientRect();
+    tooltipEl.style.left = (clientX - vpRect.left + 14) + 'px';
+    tooltipEl.style.top = (clientY - vpRect.top + 14) + 'px';
+  }
+
+  /* =====================================================================
+     EVENTS
+  ===================================================================== */
 
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1226,6 +1865,12 @@
     renderDemolishBtn(); renderRoomList(); renderScpLists();
   });
 
+  overlayBtn.addEventListener('click', () => {
+    state.powerOverlay = !state.powerOverlay;
+    overlayBtn.textContent = '👁 Power Overlay: ' + (state.powerOverlay ? 'ON' : 'OFF');
+    overlayBtn.classList.toggle('active', state.powerOverlay);
+  });
+
   canvas.addEventListener('click', (e) => {
     const { row, col } = canvasToCell(e.clientX, e.clientY);
     if (state.assignScp){ tryAssignScp(row, col); return; }
@@ -1233,8 +1878,16 @@
     else if (state.selectedRoom) placeRoom(row, col, state.selectedRoom);
   });
 
-  canvas.addEventListener('mousemove', (e) => { state.hover = canvasToCell(e.clientX, e.clientY); });
-  canvas.addEventListener('mouseleave', () => { state.hover = null; });
+  canvas.addEventListener('mousemove', (e) => {
+    state.hover = canvasToCell(e.clientX, e.clientY);
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    let nearest = null, nd = 999;
+    state.staff.forEach(d => { const dist = Math.hypot(d.x-mx, d.y-my); if (dist < 14 && dist < nd){ nd = dist; nearest = d; } });
+    state.hoverDot = nearest;
+    positionTooltip(e.clientX, e.clientY);
+  });
+  canvas.addEventListener('mouseleave', () => { state.hover = null; state.hoverDot = null; tooltipEl.style.display = 'none'; });
 
   resetBtn.addEventListener('click', () => { if (confirm('Reset the facility? All progress will be lost.')) resetGame(); });
   saveBtn.addEventListener('click', saveGame);
@@ -1242,10 +1895,16 @@
   recontainBtn.addEventListener('click', deployRecontain);
   window.addEventListener('resize', resizeCanvas);
 
+  /* =====================================================================
+     INIT
+  ===================================================================== */
+
   function init(){
     resizeCanvas();
     if (loadGame()) showToast('Save loaded.', 'success');
+    computePower();
     renderAll();
+    refreshAlertVisuals();
     setInterval(economyTick, TICK_MS);
     setInterval(dayTick, DAY_MS);
     requestAnimationFrame((t)=>{ state.lastFrame = t; loop(t); });
