@@ -231,6 +231,19 @@
     .stat-cluster{gap:14px;}
     .stat .label{display:none;}
   }
+
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(6,7,9,0.72);
+    display:none;align-items:center;justify-content:center;z-index:100;
+  }
+  .modal-overlay.visible{display:flex;}
+  .modal-box{
+    background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+    padding:20px;max-width:320px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  }
+  .modal-box p{margin:0 0 16px;font-size:13.5px;line-height:1.5;color:var(--text);}
+  .modal-actions{display:flex;gap:8px;}
+  .modal-actions .action-btn{width:auto;flex:1;}
 </style>
 </head>
 <body>
@@ -263,8 +276,8 @@
       <div class="tab-panel active" id="tab-build">
         <div class="section-title">Facility Rooms</div>
         <div class="item-list" id="room-list"></div>
-        <button id="demolish-btn">✕ Demolish Mode</button>
-        <div class="hint-box">Build corridors to connect zones — staff can only walk through built rooms and corridors, never bare rock. Heavy Cells hold Keter-class SCPs. Labs unlock new anomalies via research.</div>
+        <button id="demolish-btn" title="Reclaim 50% of a room's cost">✕ Demolish Mode</button>
+        <div class="hint-box">Corridors give staff the shortest route between zones. Without one, workers will still find their way through — just less efficiently. Demolishing a room refunds 50% of its cost. Heavy Cells hold Keter-class SCPs. Labs unlock new anomalies via research.</div>
       </div>
 
       <div class="tab-panel" id="tab-staff">
@@ -307,6 +320,16 @@
       <div class="dot-tooltip" id="dot-tooltip"></div>
       <div id="toast-container"></div>
     </main>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal-box">
+    <p id="confirm-message">Are you sure?</p>
+    <div class="modal-actions">
+      <button id="confirm-cancel" class="action-btn">Cancel</button>
+      <button id="confirm-ok" class="action-btn danger">Confirm</button>
+    </div>
   </div>
 </div>
 
@@ -378,6 +401,7 @@
   const EXPEDITION_MS = 18000;
   const RESEARCH_MS = 15000;
   const RECONTAIN_COST = 800;
+  const DEMOLISH_REFUND_RATE = 0.5;
   const SAVE_KEY = 'site19_facility_v3';
 
   /* =====================================================================
@@ -435,6 +459,10 @@
   const powerChips = document.getElementById('power-chips');
   const toastContainer = document.getElementById('toast-container');
   const resetBtn = document.getElementById('reset-btn');
+  const confirmModal = document.getElementById('confirm-modal');
+  const confirmMessage = document.getElementById('confirm-message');
+  const confirmOkBtn = document.getElementById('confirm-ok');
+  const confirmCancelBtn = document.getElementById('confirm-cancel');
   const saveBtn = document.getElementById('save-btn');
   const statusPill = document.getElementById('status-pill');
   const statusText = document.getElementById('status-text');
@@ -457,6 +485,22 @@
     t.textContent = message;
     toastContainer.appendChild(t);
     setTimeout(()=>{ t.classList.add('fade'); setTimeout(()=> t.remove(), 260); }, 2800);
+  }
+
+  // Custom confirm dialog — a native window.confirm() can be blocked or silently
+  // rejected in some embedded/sandboxed viewers, which made Reset look broken.
+  function showConfirm(message, onConfirm){
+    confirmMessage.textContent = message;
+    confirmModal.classList.add('visible');
+    function cleanup(){
+      confirmModal.classList.remove('visible');
+      confirmOkBtn.removeEventListener('click', onOk);
+      confirmCancelBtn.removeEventListener('click', onCancel);
+    }
+    function onOk(){ cleanup(); onConfirm(); }
+    function onCancel(){ cleanup(); }
+    confirmOkBtn.addEventListener('click', onOk);
+    confirmCancelBtn.addEventListener('click', onCancel);
   }
 
   function roomTypeAt(row, col){
@@ -528,14 +572,14 @@
      PATHFINDING (BFS over walkable tiles — walls = unbuilt tiles)
   ===================================================================== */
 
-  function isWalkable(row, col){
+  function isBuiltWalkable(row, col){
     if (row === ENTRANCE.row && col === ENTRANCE.col) return true;
     return state.grid[row][col] !== null;
   }
 
-  // Finds the nearest tile satisfying predicate(row,col) reachable from (startRow,startCol),
-  // walking only through walkable tiles. Returns {row,col,path} or null. path excludes the start tile.
-  function bfsSearch(startRow, startCol, predicate){
+  // Finds the nearest tile satisfying predicate(row,col) reachable from (startRow,startCol).
+  // Returns {row,col,path} or null. path excludes the start tile.
+  function bfsSearchWith(startRow, startCol, predicate, walkableFn){
     const key = (r,c) => r + ',' + c;
     const startKey = key(startRow, startCol);
     const visited = new Set([startKey]);
@@ -563,13 +607,23 @@
         if (nr<0||nr>=ROWS||nc<0||nc>=COLS) continue;
         const nk = key(nr,nc);
         if (visited.has(nk)) continue;
-        if (!isWalkable(nr,nc)) continue;
+        if (!walkableFn(nr,nc)) continue;
         visited.add(nk);
         parent.set(nk, { row:cur.row, col:cur.col });
         queue.push({ row:nr, col:nc });
       }
     }
     return null;
+  }
+
+  // Two-tier pathfinding: prefer routes through built rooms/corridors (the "avoid walls"
+  // behavior, and the reason corridors matter). If no such route exists — e.g. a room was
+  // placed without a corridor connecting it back — fall back to cutting straight across
+  // unbuilt tiles rather than leaving the worker stuck forever with nowhere to go.
+  function bfsSearch(startRow, startCol, predicate){
+    const viaBuilt = bfsSearchWith(startRow, startCol, predicate, isBuiltWalkable);
+    if (viaBuilt) return viaBuilt;
+    return bfsSearchWith(startRow, startCol, predicate, () => true);
   }
 
   function bfsPathTo(startRow, startCol, targetRow, targetCol){
@@ -1338,9 +1392,13 @@
   function demolishTile(row, col){
     if (row === ENTRANCE.row && col === ENTRANCE.col) return;
     if (scpAtCell(row, col)){ showToast('Cannot demolish — SCP contained here.', 'error'); return; }
-    if (state.grid[row][col] === null) return;
+    const cell = state.grid[row][col];
+    if (cell === null) return;
+    const room = roomById(cell.type);
+    const refund = Math.round(room.cost * DEMOLISH_REFUND_RATE);
+    state.money += refund;
     state.grid[row][col] = null;
-    showToast('Room demolished.');
+    showToast(room.name + ' demolished — refunded ' + fmtMoney(refund) + '.', 'success');
     renderAll();
   }
 
@@ -1477,14 +1535,20 @@
     state.testParticles = [];
     state.batteryCharge = 0;
     state.powerOverlay = false;
+    state.hover = null;
+    state.hoverDot = null;
+    lastIncome = 0;
+    tooltipEl.style.display = 'none';
     overlayBtn.textContent = '👁 Power Overlay: OFF';
     overlayBtn.classList.remove('active');
+    demolishBtn.classList.remove('active');
+    try { localStorage.removeItem(SAVE_KEY); } catch(e){}
     computePower();
     viewport.classList.remove('alarm','emergency');
     statusPill.className = 'status-pill';
     statusText.textContent = 'Operational';
     renderAll();
-    showToast('Facility reset.');
+    showToast('Facility reset.', 'success');
   }
 
   function saveGame(){
@@ -1889,7 +1953,9 @@
   });
   canvas.addEventListener('mouseleave', () => { state.hover = null; state.hoverDot = null; tooltipEl.style.display = 'none'; });
 
-  resetBtn.addEventListener('click', () => { if (confirm('Reset the facility? All progress will be lost.')) resetGame(); });
+  resetBtn.addEventListener('click', () => {
+    showConfirm('Reset the facility? All progress will be lost, including any saved game.', resetGame);
+  });
   saveBtn.addEventListener('click', saveGame);
   expeditionBtn.addEventListener('click', startExpedition);
   recontainBtn.addEventListener('click', deployRecontain);
